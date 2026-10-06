@@ -1,13 +1,13 @@
+$yml = @'
+name: Compilar APK
+
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
-  name: Compilar APK
 
-on:
-  workflow_dispatch:
-  push:
-    branches: [ main, master ]
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -19,12 +19,13 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Compilar versión release (firmada con clave de depuración)
-        run: ./gradlew assembleRelease
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ART-STAR-apk
-          path: app/build/outputs/apk/release/*.apk
       - run: chmod +x gradlew
-      - name: Compilar versión release (firmada con clave de depuración)
-        run: ./gradlew assembleRelease
+      - run: ./gradlew assembleRelease
+      - name: Renombrar APK
+        run: mv app/build/outputs/apk/release/app-release.apk ART-STAR-${{ github.ref_name }}.apk
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ART-STAR-*.apk
+'@
+[System.IO.File]::WriteAllText("$PWD\.github\workflows\build.yml", $yml, (New-Object System.Text.UTF8Encoding($false)))
