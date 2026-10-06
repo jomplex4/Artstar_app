@@ -16,6 +16,18 @@ jobs:
       - name: Descargar el código
         uses: actions/checkout@v4
 
+      - name: Ubicar el proyecto
+        run: |
+          G=$(find . -name gradlew -not -path './.git/*' | head -n 1)
+          if [ -z "$G" ]; then
+            echo "No se encontró gradlew en el repositorio. Archivos:"
+            ls -la
+            exit 1
+          fi
+          DIR=$(dirname "$G")
+          echo "Proyecto en: $DIR"
+          echo "APP_DIR=$DIR" >> "$GITHUB_ENV"
+
       - name: Instalar Java 17
         uses: actions/setup-java@v4
         with:
@@ -26,13 +38,16 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Dar permiso a gradlew
+        working-directory: ${{ env.APP_DIR }}
         run: chmod +x gradlew
 
       - name: Compilar APK
+        working-directory: ${{ env.APP_DIR }}
         run: ./gradlew assembleRelease
 
       - name: Renombrar APK
-        run: mv app/build/outputs/apk/release/app-release.apk ART-STAR-${{ github.ref_name }}.apk
+        working-directory: ${{ env.APP_DIR }}
+        run: mv app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/ART-STAR-${{ github.ref_name }}.apk"
 
       - name: Guardar APK como artefacto
         uses: actions/upload-artifact@v4
