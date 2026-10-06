@@ -21,3 +21,6 @@ jobs:
         with:
           name: ART-STAR-apk
           path: app/build/outputs/apk/release/*.apk
+      - run: chmod +x gradlew
+      - name: Compilar versión release (firmada con clave de depuración)
+        run: ./gradlew assembleRelease
