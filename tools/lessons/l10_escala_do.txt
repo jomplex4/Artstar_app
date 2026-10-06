@@ -1,0 +1,16 @@
+id: l10_escala_do
+title: Escala de Do mayor
+subtitle: Escalas
+cat: lesson
+group: Escalas
+desc: Sube y baja por las notas del Do al Do con sus pistones: 0, 1 y 3, 1 y 2, 1, 0, 1 y 2, 2, 0. Después viene el arpegio.
+meta: 4/4
+time: 4/4
+key: 0
+bpm: 80
+part: bar1 | Barítono
+sys
+1: e:C4 e:D4 e:E4 e:F4 e:G4 e:A4 e:B4 e:C5
+2: e:C5 e:B4 e:A4 e:G4 e:F4 e:E4 e:D4 e:C4
+3: q:C4 q:E4 q:G4 q:C5
+4: w:C5

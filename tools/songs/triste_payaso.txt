@@ -1,0 +1,174 @@
+id: triste_payaso
+title: Triste Payaso
+subtitle: Marcha militar
+meta: 2/4 | Sol mayor
+time: 2/4
+key: 1
+bpm: 112
+order: 1-8,1-5,9-11,12-19,12-17,20-22,23-50,43-48,51-60,61-68,61-65,69-71
+section: Tema inicial | 1-8
+section: Estribillo | 12-19
+section: Melodía lenta | 33-42
+section: Final | 61-68
+part: bar1 | Barítono 1
+sys
+1: {rs} h:E5~
+2: q:E5 e.:E5 s:D5
+3: h:C5~
+4: q:C5 e.:C5 s:B4
+5: h:A4~
+sys
+6: {v1} q:A4 q:r
+7: q:G4 q:B4
+8: {v1 re} q:D5 e.:B4 s:D5
+9: {v2} q:F5 q:r
+10: q:G4> q:B4
+11: e:E5> e:E5 e:E5 e:E5
+12: {rs} e:G5 e:G5 e:E5 e:G5
+13: e:r e:G5 e:G5 e:G5
+14: e:D5 e:D5 e:B4 e:D5
+sys
+15: e:r e:D5 e:D5 e:D5
+16: e:F5 e:F5 e:D5 e:F5
+17: e:r e:F5 e:F5 e:F5
+18: {v1} e:G5 e:F5 e:D5 e:E5
+19: {v1 re} e:r e:E5 e:E5 e:E5
+20: {v2} e:G5> e:F5> e:E5> e:D5>
+21: e:E5> e:r e:E5> e:r
+22: e:E5> e:r q:r
+sys
+23: e.:G4 s:G4 e.:B4 s:G4
+24: q:D5 q:r
+25: e.:D5 s:A4 e.:F4 s:A4
+26: q:D5 q:r
+27: e.:E4 s:E4 e.:G4 s:B4
+28: e:E5 e:r q:r
+29: e.:G4 s:G4 e.:B4 s:G4
+30: q:D5 q:r
+31: e.:D5 s:A4 e.:F4 s:A4
+32: q:D5 q:r
+sys
+33: e.:E4 s:E4 e.:G4 s:B4
+34: e:E5> e:B4 e:A4 e:G4
+35: e:A4 e:r q:G4>
+36: e:r e:B4 e:A4 e:G4
+37: e:A4 e:r q:G4>
+38: e:r e:B4 e:A4 e:G4
+39: e:A4 e:r q:D5>~
+sys
+40: h:D5
+41: e.:D5 s:E5 e.:F5 s:G5
+42: e:A5 e:r q:r
+43: {rs} q:C5 e.:E5 s:C5
+44: q:G5 q:r
+45: q:G4 e.:B4 s:G4
+46: q:D5 q:r
+47: q:F4 q:A4
+48: q:D5 q:r
+sys
+49: {v1} e.:E4 s:E4 e.:G4 s:B4
+50: {v1 re} e:E5 e:r q:r
+51: {v2} e.:E5> s:E5> e.:B4> s:G4>
+52: e:E4> e:B4 e:B4 e:D5
+sys
+53: e:A4 e:r q:G4>
+54: e:r e:B4 e:A4 e:G4
+55: e:A4 e:r q:D5>~
+56: h:D5~
+57: e:D5 e:r q:r
+58: e:r e:E5 e:E5 e:G5
+59: h:E5~
+60: e:E5 e:r q:r
+61: {rs} q:C5 e.:E5 s:C5
+62: q:G5 q:r
+sys
+63: q:G4 e.:B4 s:G4
+64: q:D5 q:r
+65: q:F4 q:A4
+66: {v1} q:D5 q:r
+67: e.:E4 s:E4 e.:G4 s:B4
+68: {v1 re} e:E5 e:r q:r
+69: {v2} q:D5 q:r
+70: e.:E5> s:E5> e.:B4> s:G4>
+71: e:E4> e:r q:r
+part: bar2 | Barítono 2
+sys
+1: {rs} h:B4~
+2: q:B4 e.:B4 s:A4
+3: h:G4~
+4: q:G4 e.:A4 s:G4
+5: h:F4~
+sys
+6: {v1} q:F4 q:r
+7: q:D4 q:G4
+8: {v1 re} q:B4 e.:G4 s:A4
+9: {v2} q:D5 q:r
+10: q:E4> q:G4
+11: e:B4> e:C5 e:C5 e:C5
+12: {rs} e:E5 e:E5 e:C5 e:E5
+13: e:r e:E5 e:E5 e:E5
+14: e:B4 e:B4 e:G4 e:B4
+sys
+15: e:r e:B4 e:B4 e:B4
+16: e:D5 e:D5 e:A4 e:D5
+17: e:r e:D5 e:D5 e:D5
+18: {v1} e:E5 e:D5 e:B4 e:B4
+19: {v1 re} e:r e:C5 e:C5 e:C5
+20: {v2} e:E5> e:D5> e:B4> e:A4>
+21: e:B4> e:r e:B4> e:r
+22: e:B4> e:r q:r
+sys
+23: e.:D4 s:D4 e.:G4 s:D4
+24: q:B4 q:r
+25: e.:A4 s:F4 e.:D4 s:F4
+26: q:A4 q:r
+27: e.:E4 s:E4 e.:E4 s:G4
+28: e:B4 e:r q:r
+29: e.:D4 s:D4 e.:G4 s:D4
+30: q:B4 q:r
+31: e.:A4 s:F4 e.:D4 s:F4
+32: q:A4 q:r
+sys
+33: e.:E4 s:E4 e.:E4 s:G4
+34: e:B4> e:G4 e:F4 e:E4
+35: e:F4 e:r q:D4>
+36: e:r e:G4 e:F4 e:E4
+37: e:F4 e:r q:D4>
+38: e:r e:G4 e:F4 e:E4
+39: e:F4 e:r q:A4>~
+sys
+40: h:A4
+41: e.:A4 s:C5 e.:D5 s:E5
+42: e:F5 e:r q:r
+43: {rs} q:G4 e.:C5 s:G4
+44: q:E5 q:r
+45: q:D4 e.:G4 s:D4
+46: q:B4 q:r
+47: q:D4 q:F4
+48: q:A4 q:r
+sys
+49: {v1} e.:E4 s:E4 e.:E4 s:G4
+50: {v1 re} e:B4 e:r q:r
+51: {v2} e.:B4> s:B4> e.:G4> s:E4>
+52: e:E4> e:G4 e:G4 e:B4
+sys
+53: e:F4 e:r q:D4>
+54: e:r e:G4 e:F4 e:E4
+55: e:F4 e:r q:A4>~
+56: h:A4~
+57: e:A4 e:r q:r
+58: e:r e:B4 e:B4 e:E5
+59: h:B4~
+60: e:B4 e:r q:r
+61: {rs} q:G4 e.:C5 s:G4
+62: q:E5 q:r
+sys
+63: q:D4 e.:G4 s:D4
+64: q:B4 q:r
+65: q:D4 q:F4
+66: {v1} q:A4 q:r
+67: e.:E4 s:E4 e.:E4 s:G4
+68: {v1 re} e:B4 e:r q:r
+69: {v2} q:A4 q:r
+70: e.:B4> s:B4> e.:G4> s:E4>
+71: e:E4> e:r q:r

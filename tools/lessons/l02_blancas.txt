@@ -1,0 +1,18 @@
+id: l02_blancas
+title: Blancas
+subtitle: Figuras largas
+cat: lesson
+group: Figuras largas
+desc: La blanca dura 2 tiempos, la mitad de una redonda. Cada compás lleva dos blancas: cuenta 1, 2 y 3, 4.
+meta: 4/4
+time: 4/4
+key: 0
+bpm: 66
+part: bar1 | Barítono
+sys
+1: h:C4 h:D4
+2: h:E4 h:F4
+3: h:G4 h:A4
+4: h:G4 h:F4
+5: h:E4 h:D4
+6: w:C4

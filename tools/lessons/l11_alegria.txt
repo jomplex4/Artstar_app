@@ -1,0 +1,28 @@
+id: l11_alegria
+title: Himno a la Alegría
+subtitle: Canciones
+cat: lesson
+group: Canciones
+desc: Melodía de Beethoven, muy usada para aprender. Se mueve por grados conjuntos entre Mi y Sol.
+meta: 4/4
+time: 4/4
+key: 0
+bpm: 88
+part: bar1 | Barítono
+sys
+1: q:E4 q:E4 q:F4 q:G4
+2: q:G4 q:F4 q:E4 q:D4
+3: q:C4 q:C4 q:D4 q:E4
+4: q.:E4 e:D4 h:D4
+5: q:E4 q:E4 q:F4 q:G4
+6: q:G4 q:F4 q:E4 q:D4
+7: q:C4 q:C4 q:D4 q:E4
+8: q.:D4 e:C4 h:C4
+9: q:D4 q:D4 q:E4 q:C4
+10: q:D4 q:E4 e:F4 e:E4 q:C4
+11: q:D4 q:E4 e:F4 e:E4 q:D4
+12: q:C4 q:D4 h:G3
+13: q:E4 q:E4 q:F4 q:G4
+14: q:G4 q:F4 q:E4 q:D4
+15: q:C4 q:C4 q:D4 q:E4
+16: q.:D4 e:C4 h:C4
