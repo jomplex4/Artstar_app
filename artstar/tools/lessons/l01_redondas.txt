@@ -1,0 +1,20 @@
+id: l01_redondas
+title: Redondas
+subtitle: Figuras largas
+cat: lesson
+group: Figuras largas
+desc: La redonda dura 4 tiempos. Sostén el sonido contando 1, 2, 3, 4 con el metrónomo y cambia de nota justo en la barra de compás.
+meta: 4/4
+time: 4/4
+key: 0
+bpm: 60
+part: bar1 | Barítono
+sys
+1: w:C4
+2: w:D4
+3: w:E4
+4: w:F4
+5: w:G4
+6: w:E4
+7: w:D4
+8: w:C4

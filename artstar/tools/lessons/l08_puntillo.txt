@@ -1,0 +1,18 @@
+id: l08_puntillo
+title: Puntillo
+subtitle: Figuras rápidas
+cat: lesson
+group: Figuras rápidas
+desc: El punto a la derecha de una nota le suma la mitad de su valor. La negra con puntillo dura 1 tiempo y medio.
+meta: 4/4
+time: 4/4
+key: 0
+bpm: 66
+part: bar1 | Barítono
+sys
+1: q.:C4 e:D4 q.:E4 e:F4
+2: h.:G4 q:r
+3: q.:G4 e:F4 q.:E4 e:D4
+4: h:C4 h:r
+5: e.:E4 s:F4 e.:G4 s:F4 e.:E4 s:D4 q:C4
+6: w:C4

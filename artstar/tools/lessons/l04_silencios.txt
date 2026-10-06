@@ -1,0 +1,18 @@
+id: l04_silencios
+title: Silencios
+subtitle: Figuras largas
+cat: lesson
+group: Figuras largas
+desc: Cada figura tiene su silencio con la misma duración. Durante un silencio no soples, pero sigue contando los tiempos.
+meta: 4/4
+time: 4/4
+key: 0
+bpm: 72
+part: bar1 | Barítono
+sys
+1: q:C4 q:r q:E4 q:r
+2: h:G4 h:r
+3: q:E4 q:E4 h:r
+4: q:C4 q:D4 q:E4 q:r
+5: w:C4
+6: R
