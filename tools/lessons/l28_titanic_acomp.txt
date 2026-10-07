@@ -1,0 +1,46 @@
+id: l28_titanic_acomp
+title: Titanic, acompañamiento
+subtitle: Canciones
+cat: lesson
+group: Canciones
+desc: El acompañamiento en arpegios de Titanic (Piano 2, arreglo de Raúl Pérez): Do, Sol, Fa y La menor, subiendo y bajando entre la nota grave y la aguda. Úsalo para practicar saltos y registro. Está en altura real y la app la pasa a la nota escrita de cada instrumento.
+meta: 4/4
+time: 4/4
+key: 0
+bpm: 80
+concert: 1
+part: bar1 | Barítono | key=0 | inst=bar
+sys
+1: e:C4 e:G4 e:C5 e:G4 e:C5 e:G4 e:C5 e:G4
+2: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+3: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
+4: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+5: e:C4 e:G4 e:C5 e:G4 e:C5 e:G4 e:C5 e:G4
+6: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+7: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
+8: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+9: e:C4 e:G4 e:C5 e:G4 e:C5 e:G4 e:C5 e:G4
+10: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+11: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
+12: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+13: e:C4 e:G4 e:C5 e:G4 e:C5 e:G4 e:C5 e:G4
+14: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+15: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
+16: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+17: e:A3 e:E4 e:A4 e:E4 e:A4 e:E4 e:A4 e:E4
+18: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+19: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
+20: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+21: e:A3 e:E4 e:A4 e:E4 e:A4 e:E4 e:A4 e:E4
+22: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+23: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
+24: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+25: e:A3 e:E4 e:A4 e:E4 e:A4 e:E4 e:A4 e:E4
+26: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+27: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
+28: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+29: e:A3 e:E4 e:A4 e:E4 e:A4 e:E4 e:A4 e:E4
+30: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+31: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
+32: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
+33: w:C4

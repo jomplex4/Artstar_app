@@ -214,3 +214,13 @@ if __name__ == '__main__':
                           cat=song.get('cat', 'song'), group=song.get('group', ''), parts=[dict(id=p['id'], name=p['name'], key=p['key'], inst=p['inst']) for p in song['parts']],
                           bars=nm))
     json.dump(index, open(os.path.join(dst, 'index.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    usage = {}
+    for path in paths:
+        song = parse_file(path); check_song(song, path)
+        if song.get('cat', 'song') != 'song': continue
+        for pt in song['parts']:
+            u = usage.setdefault(pt['inst'], {})
+            for m in pt['measures']:
+                for n in m['notes']:
+                    if not n[5] & 1: u.setdefault(str(n[3]), set()).add(song['title'])
+    json.dump({i: {k: sorted(v) for k, v in d.items()} for i, d in usage.items()}, open(os.path.join(dst, 'usage.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))

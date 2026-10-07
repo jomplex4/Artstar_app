@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.view.MotionEvent
 import android.view.View
+import kotlin.math.max
 import kotlin.math.min
 
 /** Muestra la digitacion de la nota: 3 pistones (bajo y trompeta) o las llaves del saxo. */
@@ -119,4 +120,68 @@ class SeekView(ctx: Context, private val onSeek: (Float) -> Unit) : View(ctx) {
     }
 
     override fun performClick(): Boolean = super.performClick()
+}
+
+/** Lista con barra lateral rapida: se arrastra el control rojo para llegar al final en un instante. */
+class FastScrollView(ctx: Context) : android.widget.FrameLayout(ctx) {
+    val sv = android.widget.ScrollView(ctx)
+    private val bar = Bar(ctx)
+
+    init {
+        sv.isVerticalScrollBarEnabled = false
+        sv.overScrollMode = OVER_SCROLL_NEVER
+        addView(sv, LayoutParams(MATCH, MATCH))
+        addView(bar, LayoutParams(ctx.dpi(26f), MATCH, android.view.Gravity.END))
+        sv.setOnScrollChangeListener { _, _, _, _, _ -> bar.invalidate() }
+    }
+
+    fun setContent(v: View) {
+        sv.addView(v, LayoutParams(MATCH, WRAP))
+        post { bar.invalidate() }
+    }
+
+    private inner class Bar(ctx: Context) : View(ctx) {
+        private val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        private val r = RectF()
+        private var dragging = false
+
+        private fun contentH(): Int = if (sv.childCount > 0) sv.getChildAt(0).height else 0
+        private fun maxScroll(): Int = max(0, contentH() - sv.height)
+        private fun thumbH(): Float {
+            val ch = contentH().toFloat()
+            if (ch <= 0f) return 0f
+            return max(context.dp(52f), height * sv.height / ch).coerceAtMost(height.toFloat())
+        }
+
+        override fun onDraw(c: Canvas) {
+            if (maxScroll() <= 0) return
+            val w = width.toFloat()
+            val th = thumbH()
+            val frac = sv.scrollY.toFloat() / maxScroll()
+            val top = frac * (height - th)
+            val cx = w - context.dp(8f)
+            p.color = C.CARD2
+            r.set(cx - context.dp(2f), 0f, cx + context.dp(2f), height.toFloat())
+            c.drawRoundRect(r, context.dp(2f), context.dp(2f), p)
+            p.color = if (dragging) C.RED_HI else C.RED
+            r.set(cx - context.dp(4f), top, cx + context.dp(4f), top + th)
+            c.drawRoundRect(r, context.dp(4f), context.dp(4f), p)
+        }
+
+        override fun onTouchEvent(e: MotionEvent): Boolean {
+            if (maxScroll() <= 0) return false
+            when (e.actionMasked) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                    dragging = true
+                    parent.requestDisallowInterceptTouchEvent(true)
+                    val th = thumbH()
+                    val f = ((e.y - th / 2f) / max(1f, height - th)).coerceIn(0f, 1f)
+                    sv.scrollTo(0, (f * maxScroll()).toInt())
+                    invalidate()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { dragging = false; invalidate() }
+            }
+            return true
+        }
+    }
 }

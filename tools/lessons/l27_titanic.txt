@@ -1,46 +1,55 @@
 id: l27_titanic
-title: Titanic (acompañamiento)
+title: Titanic
 subtitle: Canciones
 cat: lesson
 group: Canciones
-desc: El acompañamiento en arpegios de Titanic (Piano 2, arreglo de Raúl Pérez). Tu archivo no trae la melodía, solo este acompañamiento, así que es un ejercicio de arpegios: Do, Sol, Fa y La menor, subiendo y bajando entre la nota grave y la aguda. Está en altura real y la app la pasa a la nota escrita de cada instrumento.
+desc: La melodía de Titanic en la versión de Juan Rivas que enviaste. Empieza con dos corcheas de anacrusa (la app las precede de silencios para completar el compás) y tiene notas largas que piden aire y sonido parejo. Está en altura real y la app la pasa a la nota escrita de cada instrumento.
 meta: 4/4
 time: 4/4
-key: 0
-bpm: 80
+key: 1
+bpm: 92
 concert: 1
-part: bar1 | Barítono | key=0 | inst=bar
+part: bar1 | Barítono | key=1 | inst=bar
 sys
-1: e:C4 e:G4 e:C5 e:G4 e:C5 e:G4 e:C5 e:G4
-2: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-3: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
-4: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-5: e:C4 e:G4 e:C5 e:G4 e:C5 e:G4 e:C5 e:G4
-6: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-7: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
-8: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-9: e:C4 e:G4 e:C5 e:G4 e:C5 e:G4 e:C5 e:G4
-10: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-11: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
-12: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-13: e:C4 e:G4 e:C5 e:G4 e:C5 e:G4 e:C5 e:G4
-14: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-15: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
-16: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-17: e:A3 e:E4 e:A4 e:E4 e:A4 e:E4 e:A4 e:E4
-18: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-19: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
-20: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-21: e:A3 e:E4 e:A4 e:E4 e:A4 e:E4 e:A4 e:E4
-22: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-23: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
-24: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-25: e:A3 e:E4 e:A4 e:E4 e:A4 e:E4 e:A4 e:E4
-26: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-27: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
-28: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-29: e:A3 e:E4 e:A4 e:E4 e:A4 e:E4 e:A4 e:E4
-30: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-31: e:F3 e:C4 e:F4 e:C4 e:F4 e:C4 e:F4 e:C4
-32: e:G3 e:D4 e:G4 e:D4 e:G4 e:D4 e:G4 e:D4
-33: w:C4
+1: h:r q:r e:G4 e:A4
+2: h:B4 e:A4 e:G4 q:A4
+3: h:D5 e:C5 e:B4 q:G4~
+4: h.:G4 q:E4
+5: h.:D4 e:G4 e:A4
+6: h.:B4 e:A4 e:G4
+7: q:A4 h:D5 e:B4 e:D5
+8: h.:E5 q:D5
+9: w:A4
+10: q.:G4 e:G4 q:G4 q:G4
+11: q:F4 h:G4 q:F4
+12: q:F4 h:G4 q:A4
+13: h:B4 h:A4
+14: q.:G4 e:G4 q:G4 q:G4
+15: q:F4 h:G4 q:G4
+16: w:D4~
+17: w:D4
+18: q.:G4 e:G4 q:G4 q:G4
+19: q:F4 h:G4 q:F4
+20: q:F4 h:G4 q:A4
+21: h:B4 h:A4
+22: q.:G4 e:G4 q:G4 q:G4
+23: q:F4 h:G4 q:D4
+24: w:D4~
+25: w:D4
+26: w:G4
+27: h.:A4 q:D4
+28: h:D5 q:C5 q:B4
+29: h:A4 q:B4 q:C5
+30: h:B4 q:A4 q:G4
+31: q:F4 h:G4 q:F4
+32: w:E4
+33: w:D4
+34: w:G4
+35: h.:A4 q:D4
+36: h:D5 q:C5 q:B4
+37: h:A4 q:B4 q:C5
+38: h:B4 q:A4 q:G4
+39: q:F4 h:G4 q:F4
+40: q:F4 h:G4 q:A4
+41: h:B4 h:A4
+42: w:G4

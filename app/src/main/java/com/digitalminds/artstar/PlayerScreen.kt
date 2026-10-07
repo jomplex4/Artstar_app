@@ -25,6 +25,8 @@ interface Host {
     fun ensureMic(cb: (Boolean) -> Unit)
     fun toast(msg: String)
     fun closePlayer()
+    fun reportError(e: Throwable)
+    fun setOrientation(landscape: Boolean)
 }
 
 /** Percusion de marcha: 3 formas de tocar por instrumento, escritas sobre una celda de 2 tiempos en semicorcheas. */
@@ -361,7 +363,7 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
 
     private fun refreshModeChips() {
         modeBtn.setText(arrayOf("Libre", "Espera", "Evaluar")[mode])
-        updateHud()
+        if (::stream.isInitialized) updateHud()
     }
 
     private fun stepMeasure(d: Int) {
@@ -394,7 +396,12 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
             if (lastNanos == 0L) lastNanos = frameTimeNanos
             val dt = min(0.1, (frameTimeNanos - lastNanos) / 1e9)
             lastNanos = frameTimeNanos
-            step(dt)
+            try {
+                step(dt)
+            } catch (e: Exception) {
+                setPlaying(false)
+                host.reportError(e)
+            }
             Choreographer.getInstance().postFrameCallback(this)
         }
     }
@@ -658,6 +665,7 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
     private fun setIf(tv: TextView, s: String) { if (tv.text.toString() != s) tv.text = s }
 
     private fun updateHud() {
+        if (!::stream.isInitialized || stream.slots.isEmpty()) return
         val eff = Math.round(baseBpm * speeds[speedIdx]).toInt()
         setIf(subV, part.name + " · " + eff + " bpm")
         val slotIdx = if (tick < 0) 0 else min(stream.slots.size - 1, (tick / stream.mlen).toInt())

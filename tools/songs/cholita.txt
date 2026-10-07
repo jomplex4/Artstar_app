@@ -55,6 +55,82 @@ sys
 sys
 35: {v1 re} e:D5 e:C5 e:B4 e:A4 q:F4 e3:A4 e3:B4 e3:C5
 36: {v2} q:D5 e.:D5 s:F5 q:A5 q:r
+part: tpt1 | Trompeta 1 | key=-1 | inst=tpt
+sys
+1: q.:F5 s:G5 s:F5 q.:E5 s:E5 s:E5
+2: h:F5~ q:F5 e:r e:A4
+3: q.:C5 s:C5 s:C5 q.:D5 s:C5 s:B4
+4: h:A4~ q:A4 e:r e:A4
+5: h:G4~ e:G4 e:C5 e:A4 e:G4
+6: h:F4~ q:F4 e3:F4 e3:E4 e3:F4
+7: e3:A4 e3:A4 e3:A4 e3:A4 e3:A4 e3:A4 e3:C5 e3:C5 e3:C5 e3:C5 e3:C5 e3:C5
+8: q:D5> q:r q:r e:r e:A4
+9: e:D5 q:A4 e:D5 q:C5 q:G4
+10: e:C5 e:A4~ q:A4 q:r e:r e:A4
+11: e:D5 q:A4 e:D5 q:C5 q:G4
+12: h:A4~ e:A4 e:C5 e:C5 e:C5
+13: {rs rm=A} e:A4 q:C5 e:A4 q:C5 q:A4
+14: e:D5 e:C5~ q:C5 e:r e:C5 e:C5 e:C5
+15: e:A4 q:C5 e:D5 q:A4 q:G4
+16: {v1 re} h:A4~ e:A4 e:C5 e:C5 e:C5
+17: {v2} h:F4~ e:F4 e:A4 e:F5 e:E5
+18: e:F5 e:E5 e:D5 e:F5 e:r e:F5 e:E5 e:D5
+19: e:C5 q.:A4 e:r e:C5 e:F5 e:E5
+20: e:F5 e:E5 e:D5 e:F5 e:r e:F5 e:E5 e:D5
+21: h:C5~ e:C5 e:C5 e:C5 e:C5
+22: {rs rm=B} e:A4 q:C5 e:A4 q:C5 q:A4
+23: e:D5 e:C5~ q:C5 e:r e:C5 e:C5 e:C5
+24: {v1} e:A4 q:C5 e:D5 q:A4 q:G4
+25: {v1 re} h:A4~ e:A4 e:C5 e:C5 e:C5
+26: {v2} h:A4 h:C5
+27: e3:D5 e3:D5 e3:D5 e3:D5 e3:D5 e3:D5 q:D5 q:r
+28: {rs rm=C} e:r s:D5 s:D5 q:D5 e:r s:D5 s:D5 q:D5
+29: e:r s:D5 s:D5 e:D5 e:D5 h:D5
+30: e:r s:F5 s:F5 q:F5 e:r s:F5 s:F5 q:F5
+31: e:r s:F5 s:F5 e:F5 e:F5 h:F5
+32: h:C5 h:Bn4
+33: e3:C5 e3:C5 e3:C5 e3:C5 e3:C5 e3:C5 q:C5 q:r
+34: h:A4 h:C5
+35: {v1 re} e3:D5 e3:D5 e3:D5 e3:D5 e3:D5 e3:D5 q:D5 q:r
+36: {v2} q:D5 e.:D5 s:D5 q:D5 q:r
+part: tpt2 | Trompeta 2 | key=-1 | inst=tpt
+sys
+1: q.:D5 s:E5 s:D5 q.:C5 s:D5 s:D5
+2: h:D5~ q:D5 e:r e:F4
+3: q.:A4 s:A4 s:A4 q.:B4 s:A4 s:G4
+4: h:F4~ q:F4 e:r e:F4
+5: h:E4~ e:E4 e:A4 e:F4 e:E4
+6: h:D4~ q:D4 e3:D4 e3:C4 e3:D4
+7: e3:F4 e3:F4 e3:F4 e3:F4 e3:F4 e3:F4 e3:G4 e3:G4 e3:G4 e3:G4 e3:G4 e3:G4
+8: q:B4> q:r q:r e:r e:F4
+9: e:B4 q:F4 e:B4 q:A4 q:E4
+10: e:A4 e:F4~ q:F4 q:r e:r e:F4
+11: e:B4 q:F4 e:B4 q:A4 q:E4
+12: h:D4~ e:D4 e:A4 e:A4 e:A4
+13: {rs rm=A} e:F4 q:A4 e:F4 q:A4 q:F4
+14: e:B4 e:A4~ q:A4 e:r e:A4 e:A4 e:A4
+15: e:F4 q:A4 e:B4 q:F4 q:E4
+16: {v1 re} h:D4~ e:D4 e:A4 e:A4 e:A4
+17: {v2} h:D4~ e:D4 e:F4 e:D5 e:C5
+18: e:D5 e:C5 e:B4 e:D5 e:r e:D5 e:C5 e:B4
+19: e:A4 q.:F4 e:r e:A4 e:D5 e:C5
+20: e:D5 e:C5 e:B4 e:D5 e:r e:D5 e:C5 e:B4
+21: h:A4~ e:A4 e:A4 e:A4 e:A4
+22: {rs rm=B} e:F4 q:A4 e:F4 q:A4 q:F4
+23: e:B4 e:A4~ q:A4 e:r e:A4 e:A4 e:A4
+24: {v1} e:F4 q:A4 e:B4 q:F4 q:E4
+25: {v1 re} h:F4~ e:F4 e:A4 e:A4 e:A4
+26: {v2} h:F4 h:A4
+27: e3:B4 e3:B4 e3:B4 e3:B4 e3:B4 e3:B4 q:B4 q:r
+28: {rs rm=C} e:r s:B4 s:B4 q:B4 e:r s:B4 s:B4 q:B4
+29: e:r s:B4 s:B4 e:B4 e:B4 h:B4
+30: e:r s:C5 s:C5 q:C5 e:r s:C5 s:C5 q:C5
+31: e:r s:C5 s:C5 e:C5 e:C5 h:C5
+32: h:A4 h:G4
+33: e3:A4 e3:A4 e3:A4 e3:A4 e3:A4 e3:A4 q:A4 q:r
+34: h:G4 h:A4
+35: {v1 re} e3:B4 e3:B4 e3:B4 e3:B4 e3:B4 e3:B4 q:B4 q:r
+36: {v2} q:B4 e.:B4 s:B4 q:B4 q:r
 part: tbn | Trombón | key=-3 | inst=tbn | from=bajo | semis=-14 | steps=-8 | keyd=-2
 part: tuba | Tuba | key=-3 | inst=tuba | from=bajo | semis=-26 | steps=-15 | keyd=-2
 

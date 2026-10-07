@@ -1,4 +1,4 @@
-# ART STAR 1.4
+# ART STAR 1.5
 
 App Android nativa en Kotlin de DigitalMinds para aprender y practicar las marchas de la banda escolar. Sin internet, sin anuncios y sin dependencias externas.
 
@@ -8,7 +8,7 @@ App Android nativa en Kotlin de DigitalMinds para aprender y practicar las march
 - Marchas: Cóndor Pasa, Triste Payaso, Jinetes en el Cielo, Colegiala y Cholita.
 - Banda de acompañamiento: los demás instrumentos de viento de la marcha suenan con muestras reales, más bombo, tarola, napoleón, platillo, pandereta y lira, cada uno con 3 formas de tocar.
 - Velocidades en BPM reales, modo Espera y modo Evaluar con micrófono, secciones y bucle.
-- Aprender: explorador de notas con flechas, símbolos uno por uno, tablas de digitación con sonido, ejercicios y 16 canciones para bajo, trompeta, saxo, trombón y tuba.
+- Aprender: explorador de notas con flechas, símbolos uno por uno, tablas de digitación con sonido, ejercicios y 17 canciones para bajo, trompeta, saxo, trombón y tuba.
 - Metrónomo con subdivisiones y afinador con transposición (Si bemol y Mi bemol).
 
 ## Compilar
