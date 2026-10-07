@@ -27,12 +27,43 @@ class MainActivity : Activity(), Host {
         super.onCreate(savedInstanceState)
         Fonts.init(this)
         prefs = getSharedPreferences("artstar", MODE_PRIVATE)
+        if (prefs.getInt("schema", 0) < 2) {
+            val e = prefs.edit()
+            for (k in prefs.all.keys) if (k.startsWith("bpm_")) e.remove(k)
+            e.putInt("speed", 3).putInt("schema", 2).apply()
+        }
+        Thread { Bank.load(applicationContext) }.start()
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         root = FrameLayout(this)
         root.setBackgroundColor(C.BG)
         setContentView(root)
-        showHome()
+        showSplash()
+    }
+
+    /** Pantalla de entrada: icono de la app y "Powered by" DigitalMinds. */
+    private fun showSplash() {
+        val sp = FrameLayout(this)
+        sp.setBackgroundColor(C.BG)
+        val icon = android.widget.ImageView(this)
+        icon.setImageBitmap(assets.open("splash_icon.png").use { android.graphics.BitmapFactory.decodeStream(it) })
+        sp.addView(icon, FrameLayout.LayoutParams(dpi(116f), dpi(116f), android.view.Gravity.CENTER))
+        val box = android.widget.LinearLayout(this)
+        box.orientation = android.widget.LinearLayout.VERTICAL
+        box.gravity = android.view.Gravity.CENTER_HORIZONTAL
+        val pb = label(this, "POWERED BY", 12f, C.MUTED, Fonts.medium)
+        pb.letterSpacing = 0.35f
+        box.addView(pb)
+        val lg = logoView(this, 18f)
+        (lg.layoutParams as android.widget.LinearLayout.LayoutParams).topMargin = dpi(12f)
+        box.addView(lg)
+        sp.addView(box, FrameLayout.LayoutParams(WRAP, WRAP, android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL).also { it.bottomMargin = dpi(96f) })
+        root.addView(sp, FrameLayout.LayoutParams(MATCH, MATCH))
+        root.postDelayed({
+            if (player == null && home == null) {
+                sp.animate().alpha(0f).setDuration(260).withEndAction { showHome() }.start()
+            }
+        }, 1300)
     }
 
     override fun onStart() {
@@ -43,7 +74,7 @@ class MainActivity : Activity(), Host {
     override fun onStop() {
         player?.pause()
         home?.onLeave()
-        synth.silence()
+        synth.allOff()
         synth.metroOn = false
         synth.stop()
         super.onStop()

@@ -117,6 +117,7 @@ class IconView(ctx: Context, private val kind: Int) : View(ctx) {
         const val PLAY = 0; const val PAUSE = 1; const val PREV = 2; const val NEXT = 3; const val BACK = 4
         const val METRO = 5; const val TUNER = 6; const val MIC = 7; const val GEAR = 8; const val CHECK = 9
         const val MINUS = 10; const val PLUS = 11; const val NOTE = 12; const val LEARN = 13; const val CLOSE = 14
+        const val UP = 15; const val DOWN = 16; const val CHEVRON_DOWN = 17; const val CHEVRON_RIGHT = 18; const val DRUM = 19
     }
 
     var color = C.TEXT
@@ -170,6 +171,19 @@ class IconView(ctx: Context, private val kind: Int) : View(ctx) {
                 }
             }
             NOTE -> { drawGlyph(c, 0xE1D7, s * 1.6f, cx - s * 0.2f, cy + s * 0.25f) }
+            UP -> { path.reset(); path.moveTo(cx, cy - s * 0.3f); path.lineTo(cx + s * 0.36f, cy + s * 0.24f); path.lineTo(cx - s * 0.36f, cy + s * 0.24f); path.close(); c.drawPath(path, p) }
+            DOWN -> { path.reset(); path.moveTo(cx, cy + s * 0.3f); path.lineTo(cx + s * 0.36f, cy - s * 0.24f); path.lineTo(cx - s * 0.36f, cy - s * 0.24f); path.close(); c.drawPath(path, p) }
+            CHEVRON_DOWN -> { p.style = Paint.Style.STROKE; path.reset(); path.moveTo(cx - s * 0.25f, cy - s * 0.1f); path.lineTo(cx, cy + s * 0.15f); path.lineTo(cx + s * 0.25f, cy - s * 0.1f); c.drawPath(path, p) }
+            CHEVRON_RIGHT -> { p.style = Paint.Style.STROKE; path.reset(); path.moveTo(cx - s * 0.1f, cy - s * 0.25f); path.lineTo(cx + s * 0.15f, cy); path.lineTo(cx - s * 0.1f, cy + s * 0.25f); c.drawPath(path, p) }
+            DRUM -> {
+                p.style = Paint.Style.STROKE
+                r.set(cx - s * 0.32f, cy - s * 0.2f, cx + s * 0.32f, cy - s * 0.02f); c.drawOval(r, p)
+                c.drawLine(cx - s * 0.32f, cy - s * 0.11f, cx - s * 0.32f, cy + s * 0.2f, p)
+                c.drawLine(cx + s * 0.32f, cy - s * 0.11f, cx + s * 0.32f, cy + s * 0.2f, p)
+                r.set(cx - s * 0.32f, cy + s * 0.11f, cx + s * 0.32f, cy + s * 0.29f); c.drawArc(r, 0f, 180f, false, p)
+                c.drawLine(cx - s * 0.1f, cy - s * 0.18f, cx - s * 0.3f, cy - s * 0.38f, p)
+                c.drawLine(cx + s * 0.1f, cy - s * 0.18f, cx + s * 0.3f, cy - s * 0.38f, p)
+            }
             LEARN -> { drawGlyph(c, 0xE050, s * 1.25f, cx - s * 0.2f, cy + s * 0.22f) }
         }
     }

@@ -1,22 +1,23 @@
 package com.digitalminds.artstar
 
+import android.app.Dialog
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
-import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.Window
 import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import kotlin.math.abs
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -167,40 +168,62 @@ fun scrollOf(ctx: Context, build: (LinearLayout) -> Unit): ScrollView {
     return sv
 }
 
+/** Fila de pastillas de seleccion (una activa). */
+fun pickRow(ctx: Context, names: List<String>, selected: Int, onPick: (Int) -> Unit): View {
+    val sc = HorizontalScrollView(ctx)
+    sc.isHorizontalScrollBarEnabled = false
+    val r = LinearLayout(ctx)
+    val chips = ArrayList<Chip>()
+    for ((i, n) in names.withIndex()) {
+        val c = Chip(ctx, n); c.setActive(i == selected)
+        c.tap { for ((k, x) in chips.withIndex()) x.setActive(k == i); onPick(i) }
+        chips.add(c)
+        r.addView(c, lp(WRAP, WRAP).also { it.setMargins(0, 0, ctx.dpi(6f), 0) })
+    }
+    sc.addView(r)
+    return sc
+}
+
+fun soundOf(inst: InstDef, writtenMidi: Int): Int = writtenMidi + inst.transpose
+
 // ====================== BIBLIOTECA ======================
 
 class LibraryTab(private val host: Host, private val songs: List<SongInfo>, private val open: (SongInfo, String, Int) -> Unit) : FrameLayout(host as Context) {
     private val ctx: Context = host as Context
-    private var partIdx = host.prefs.getInt("part", 0)
+    private var instIdx = host.prefs.getInt("lib_inst", 0).coerceIn(0, 4)
+    private var voice = host.prefs.getInt("lib_voice", 0).coerceIn(0, 1)
 
-    init {
-        build()
+    init { build() }
+
+    private fun partFor(s: SongInfo): PartInfo? {
+        val inst = Insts.practice[instIdx].id
+        val list = s.partsOf(inst)
+        if (list.isEmpty()) return null
+        return list.getOrNull(voice) ?: list[0]
     }
 
     private fun build() {
         removeAllViews()
         val list = songs.filter { it.cat == "song" }
         addView(scrollOf(ctx) { col ->
-            // selector de parte (pastilla como en COMET)
             val pill = LinearLayout(ctx)
             pill.background = roundRect(C.CARD2, ctx.dp(26f))
             pill.setPadding(ctx.dpi(4f), ctx.dpi(4f), ctx.dpi(4f), ctx.dpi(4f))
-            val names = arrayOf("Barítono 1", "Barítono 2")
-            for ((i, n) in names.withIndex()) {
-                val t = label(ctx, n, 15f, if (i == partIdx) C.TEXT else C.MUTED, Fonts.medium)
+            for ((i, n) in arrayOf("Bajo", "Trompeta", "Saxo", "Trombón", "Tuba").withIndex()) {
+                val t = label(ctx, n, 12.5f, if (i == instIdx) C.TEXT else C.MUTED, Fonts.medium)
                 t.gravity = Gravity.CENTER
                 t.setPadding(0, ctx.dpi(11f), 0, ctx.dpi(11f))
-                if (i == partIdx) t.background = roundRect(C.RED, ctx.dp(22f))
-                t.tap { partIdx = i; host.prefs.edit().putInt("part", i).apply(); build() }
+                t.maxLines = 1
+                if (i == instIdx) t.background = roundRect(C.RED, ctx.dp(22f))
+                t.tap { instIdx = i; host.prefs.edit().putInt("lib_inst", i).apply(); build() }
                 pill.addView(t, lp(0, WRAP, 1f))
             }
-            col.addView(pill, lp(MATCH, WRAP).also { it.setMargins(0, ctx.dpi(8f), 0, ctx.dpi(18f)) })
-
-            val head = label(ctx, "${list.size} marchas", 17f, C.TEXT, Fonts.bold)
-            head.setPadding(ctx.dpi(2f), 0, 0, ctx.dpi(10f))
-            col.addView(head)
-
+            col.addView(pill, lp(MATCH, WRAP).also { it.setMargins(0, ctx.dpi(6f), 0, ctx.dpi(10f)) })
+            col.addView(pickRow(ctx, listOf("Primera voz", "Segunda voz"), voice) { voice = it; host.prefs.edit().putInt("lib_voice", it).apply(); build() },
+                lp(MATCH, WRAP).also { it.bottomMargin = ctx.dpi(14f) })
+            col.addView(label(ctx, "${list.size} marchas", 17f, C.TEXT, Fonts.bold).also { it.setPadding(ctx.dpi(2f), 0, 0, ctx.dpi(10f)) })
             for (s in list) {
+                val p = partFor(s)
                 val c = card(ctx)
                 val ic = FrameLayout(ctx)
                 ic.background = roundRect(C.CARD2, ctx.dp(14f))
@@ -210,21 +233,17 @@ class LibraryTab(private val host: Host, private val songs: List<SongInfo>, priv
                 tx.orientation = LinearLayout.VERTICAL
                 tx.setPadding(ctx.dpi(14f), 0, ctx.dpi(8f), 0)
                 tx.addView(label(ctx, s.title, 17f, C.TEXT, Fonts.bold))
-                val sub = label(ctx, s.subtitle + " · " + s.meta + (if (s.parts.size == 1) " · solo " + s.parts[0].second else ""), 13f, C.MUTED)
-                sub.setPadding(0, ctx.dpi(3f), 0, 0)
-                tx.addView(sub)
+                val sub = if (p != null) s.subtitle + " · " + s.meta + " · " + p.name else "Sin parte de " + Insts.practice[instIdx].short.lowercase()
+                tx.addView(label(ctx, sub, 13f, C.MUTED).also { it.setPadding(0, ctx.dpi(3f), 0, 0) })
                 c.addView(tx, lp(0, WRAP, 1f))
                 val pl = FrameLayout(ctx)
-                pl.background = roundRect(C.RED, ctx.dp(20f))
-                pl.addView(IconView(ctx, IconView.PLAY), FrameLayout.LayoutParams(ctx.dpi(26f), ctx.dpi(26f), Gravity.CENTER))
+                pl.background = roundRect(if (p != null) C.RED else C.CARD2, ctx.dp(20f))
+                pl.addView(IconView(ctx, IconView.PLAY).also { it.color = if (p != null) C.TEXT else C.DIM }, FrameLayout.LayoutParams(ctx.dpi(26f), ctx.dpi(26f), Gravity.CENTER))
                 c.addView(pl, lp(ctx.dpi(40f), ctx.dpi(40f)))
-                val pid = s.parts.getOrNull(partIdx)?.first ?: s.parts[0].first
-                c.tap { open(s, pid, 0) }
+                if (p != null) c.tap { open(s, p.id, 0) } else c.alpha = 0.55f
                 col.addView(c, cardLp(ctx))
             }
-            val hint = label(ctx, "Cada marcha trae sus secciones de práctica, por ejemplo el tema principal, para repasar solo lo más bonito.", 12f, C.DIM)
-            hint.setPadding(ctx.dpi(2f), ctx.dpi(8f), ctx.dpi(2f), 0)
-            col.addView(hint)
+            col.addView(label(ctx, "Dentro de cada marcha puedes practicar por secciones y activar la banda: bombo, tarola, napoleón, platillo, pandereta, lira y los demás instrumentos de viento.", 12f, C.DIM).also { it.setPadding(ctx.dpi(2f), ctx.dpi(8f), ctx.dpi(2f), 0) })
         }, LayoutParams(MATCH, MATCH))
     }
 }
@@ -233,146 +252,197 @@ class LibraryTab(private val host: Host, private val songs: List<SongInfo>, priv
 
 class LearnTab(private val host: Host, private val songs: List<SongInfo>, private val open: (SongInfo, String, Int) -> Unit, private val push: (String, View) -> Unit) : FrameLayout(host as Context) {
     private val ctx: Context = host as Context
+    private val expanded = HashSet<String>()
 
     init {
+        host.prefs.getString("learn_open", "Figuras largas")?.split("|")?.filter { it.isNotEmpty() }?.let { expanded.addAll(it) }
+        build()
+    }
+
+    private fun build() {
+        removeAllViews()
         addView(scrollOf(ctx) { col ->
             col.addView(label(ctx, "Aprende a leer partitura", 22f, C.TEXT, Fonts.bold).also { it.setPadding(ctx.dpi(2f), ctx.dpi(8f), 0, ctx.dpi(4f)) })
-            col.addView(label(ctx, "Empieza por las herramientas y sigue los ejercicios en orden.", 13f, C.MUTED).also { it.setPadding(ctx.dpi(2f), 0, 0, ctx.dpi(14f)) })
-
+            col.addView(label(ctx, "Herramientas primero, luego los ejercicios por grupos. Toca un grupo para abrirlo.", 13f, C.MUTED).also { it.setPadding(ctx.dpi(2f), 0, 0, ctx.dpi(14f)) })
             fun tool(glyph: String, music: Boolean, title: String, text: String, action: () -> Unit) {
                 val c = card(ctx)
                 val ic = FrameLayout(ctx)
                 ic.background = roundRect(C.CARD2, ctx.dp(14f))
-                ic.addView(GlyphIcon(ctx, glyph, music, false, if (music) 30f else 22f), FrameLayout.LayoutParams(MATCH, MATCH))
+                ic.addView(GlyphIcon(ctx, glyph, music, false, if (music) 30f else 20f), FrameLayout.LayoutParams(MATCH, MATCH))
                 c.addView(ic, lp(ctx.dpi(52f), ctx.dpi(52f)))
                 val tx = LinearLayout(ctx)
                 tx.orientation = LinearLayout.VERTICAL
                 tx.setPadding(ctx.dpi(14f), 0, ctx.dpi(6f), 0)
                 tx.addView(label(ctx, title, 16f, C.TEXT, Fonts.bold))
-                val s = label(ctx, text, 12.5f, C.MUTED)
-                s.setPadding(0, ctx.dpi(3f), 0, 0)
-                tx.addView(s)
+                tx.addView(label(ctx, text, 12.5f, C.MUTED).also { it.setPadding(0, ctx.dpi(3f), 0, 0) })
                 c.addView(tx, lp(0, WRAP, 1f))
+                c.addView(IconView(ctx, IconView.CHEVRON_RIGHT).also { it.color = C.MUTED }, lp(ctx.dpi(22f), ctx.dpi(22f)))
                 c.tap(action)
                 col.addView(c, cardLp(ctx))
             }
-            tool("\uE050", true, "Explorador de notas", "Toca el pentagrama: ves el nombre, los pistones y escuchas la nota.") { push("Explorador de notas", ExplorerView(host)) }
-            tool("\uE1D5", true, "Símbolos de la partitura", "Figuras, silencios, repeticiones, casillas, ligaduras y más.") { push("Símbolos", symbolsView()) }
-            tool("0 1 2", false, "Tabla de pistones", "Qué pistones presionar para cada nota de tu bajo.") { push("Tabla de pistones", chartView()) }
+            tool("\uE050", true, "Explorador de notas", "Sube y baja nota por nota con las flechas, en tu instrumento, y escúchala.") { push("Explorador de notas", ExplorerView(host)) }
+            tool("\uE1D5", true, "Símbolos de la partitura", "Cada figura, silencio y signo, uno por uno.") { push("Símbolos", symbolsView()) }
+            tool("0 1 2", false, "Tabla de digitación", "Pistones del bajo y la trompeta, y llaves del saxofón, con sonido.") { push("Tabla de digitación", ChartView(host)) }
 
             val lessons = songs.filter { it.cat == "lesson" }
-            var group = ""
-            for (l in lessons) {
-                if (l.group != group) {
-                    group = l.group
-                    val g = label(ctx, group, 15f, C.MUTED, Fonts.medium)
-                    g.setPadding(ctx.dpi(2f), ctx.dpi(14f), 0, ctx.dpi(8f))
-                    col.addView(g)
+            val groups = LinkedHashMap<String, ArrayList<SongInfo>>()
+            for (l in lessons) groups.getOrPut(l.group) { ArrayList() }.add(l)
+            for ((g, items) in groups) {
+                val open = expanded.contains(g)
+                val head = LinearLayout(ctx)
+                head.gravity = Gravity.CENTER_VERTICAL
+                head.background = roundRect(C.CARD2, ctx.dp(16f))
+                head.setPadding(ctx.dpi(16f), ctx.dpi(14f), ctx.dpi(14f), ctx.dpi(14f))
+                head.addView(label(ctx, g, 16f, C.TEXT, Fonts.bold), lp(0, WRAP, 1f))
+                head.addView(label(ctx, "${items.size}", 13f, C.MUTED, Fonts.medium).also { it.setPadding(0, 0, ctx.dpi(10f), 0) })
+                head.addView(IconView(ctx, if (open) IconView.CHEVRON_DOWN else IconView.CHEVRON_RIGHT).also { it.color = C.RED_HI }, lp(ctx.dpi(22f), ctx.dpi(22f)))
+                head.tap {
+                    if (open) expanded.remove(g) else expanded.add(g)
+                    host.prefs.edit().putString("learn_open", expanded.joinToString("|")).apply()
+                    build()
                 }
-                val c = card(ctx)
-                val tx = LinearLayout(ctx)
-                tx.orientation = LinearLayout.VERTICAL
-                tx.addView(label(ctx, l.title, 16f, C.TEXT, Fonts.bold))
-                val s = label(ctx, l.meta + " · " + l.bars + " compases", 12.5f, C.MUTED)
-                s.setPadding(0, ctx.dpi(3f), 0, 0)
-                tx.addView(s)
-                c.addView(tx, lp(0, WRAP, 1f))
-                val go = FrameLayout(ctx)
-                go.background = roundRect(C.CARD2, ctx.dp(18f))
-                go.addView(IconView(ctx, IconView.PLAY).also { it.color = C.RED_HI }, FrameLayout.LayoutParams(ctx.dpi(22f), ctx.dpi(22f), Gravity.CENTER))
-                c.addView(go, lp(ctx.dpi(36f), ctx.dpi(36f)))
-                c.tap { push(l.title, lessonView(l)) }
-                col.addView(c, cardLp(ctx))
+                col.addView(head, lp(MATCH, WRAP).also { it.setMargins(0, ctx.dpi(8f), 0, ctx.dpi(8f)) })
+                if (!open) continue
+                for (l in items) {
+                    val c = card(ctx)
+                    val tx = LinearLayout(ctx)
+                    tx.orientation = LinearLayout.VERTICAL
+                    tx.addView(label(ctx, l.title, 16f, C.TEXT, Fonts.bold))
+                    tx.addView(label(ctx, l.meta + " · " + l.bars + " compases", 12.5f, C.MUTED).also { it.setPadding(0, ctx.dpi(3f), 0, 0) })
+                    c.addView(tx, lp(0, WRAP, 1f))
+                    val go = FrameLayout(ctx)
+                    go.background = roundRect(C.CARD2, ctx.dp(18f))
+                    go.addView(IconView(ctx, IconView.PLAY).also { it.color = C.RED_HI }, FrameLayout.LayoutParams(ctx.dpi(22f), ctx.dpi(22f), Gravity.CENTER))
+                    c.addView(go, lp(ctx.dpi(36f), ctx.dpi(36f)))
+                    c.tap { push(l.title, lessonView(l)) }
+                    col.addView(c, lp(MATCH, WRAP).also { it.setMargins(ctx.dpi(8f), 0, 0, ctx.dpi(8f)) })
+                }
             }
         }, LayoutParams(MATCH, MATCH))
     }
 
     private fun lessonView(info: SongInfo): View {
         val song = Library.load(ctx, info.id)
+        var instIdx = host.prefs.getInt("lib_inst", 0).coerceIn(0, 4)
         return scrollOf(ctx) { col ->
             col.addView(label(ctx, info.group, 13f, C.MUTED, Fonts.medium))
-            val d = label(ctx, song.desc, 16f, C.TEXT)
-            d.setLineSpacing(0f, 1.2f)
-            d.setPadding(0, ctx.dpi(8f), 0, ctx.dpi(18f))
-            col.addView(d)
-            val meta = label(ctx, "Compás ${song.num}/${song.den} · tempo ${song.bpm} · ${info.bars} compases", 13f, C.MUTED)
-            meta.setPadding(0, 0, 0, ctx.dpi(18f))
-            col.addView(meta)
+            col.addView(label(ctx, song.desc, 16f, C.TEXT).also { it.setLineSpacing(0f, 1.2f); it.setPadding(0, ctx.dpi(8f), 0, ctx.dpi(14f)) })
+            col.addView(label(ctx, "Compás ${song.num}/${song.den} · tempo ${song.bpm} · ${info.bars} compases", 13f, C.MUTED).also { it.setPadding(0, 0, 0, ctx.dpi(14f)) })
+            col.addView(label(ctx, "Instrumento", 13f, C.MUTED, Fonts.medium).also { it.setPadding(0, 0, 0, ctx.dpi(6f)) })
+            col.addView(pickRow(ctx, Insts.practice.map { it.name }, instIdx) { instIdx = it; host.prefs.edit().putInt("lib_inst", it).apply() },
+                lp(MATCH, WRAP).also { it.bottomMargin = ctx.dpi(16f) })
             fun big(text: String, sub: String, mode: Int, primary: Boolean) {
                 val c = card(ctx)
                 if (primary) c.background = roundRect(C.RED, ctx.dp(18f))
                 val tx = LinearLayout(ctx)
                 tx.orientation = LinearLayout.VERTICAL
                 tx.addView(label(ctx, text, 16f, C.TEXT, Fonts.bold))
-                val s = label(ctx, sub, 12.5f, if (primary) C.TEXT else C.MUTED)
-                s.setPadding(0, ctx.dpi(3f), 0, 0)
-                tx.addView(s)
+                tx.addView(label(ctx, sub, 12.5f, if (primary) C.TEXT else C.MUTED).also { it.setPadding(0, ctx.dpi(3f), 0, 0) })
                 c.addView(tx, lp(0, WRAP, 1f))
-                c.tap { open(info, "bar1", mode) }
+                c.tap {
+                    val id = song.parts.firstOrNull { it.inst.id == Insts.practice[instIdx].id }?.id ?: song.parts[0].id
+                    open(info, id, mode)
+                }
                 col.addView(c, cardLp(ctx))
             }
-            big("Practicar", "La partitura se desplaza sola, con metrónomo y sonido.", 0, true)
+            big("Practicar", "La partitura se desplaza sola, con metrónomo y sonido real.", 0, true)
             big("Modo espera", "Avanza solo cuando tocas la nota correcta. Usa el micrófono.", 1, false)
             big("Evaluar", "Toca a tiempo y gana estrellas. Usa el micrófono.", 2, false)
-        }
-    }
-
-    private fun chartView(): View = scrollOf(ctx) { col ->
-        val h = label(ctx, "Nota escrita en clave de sol y pistones del bajo en Si bemol. Con 0 no presionas nada.", 13f, C.MUTED)
-        h.setPadding(0, 0, 0, ctx.dpi(12f))
-        col.addView(h)
-        for (m in 84 downTo 54) {
-            val f = Fingering.forMidi(m) ?: continue
-            val row = LinearLayout(ctx)
-            row.gravity = Gravity.CENTER_VERTICAL
-            row.background = roundRect(C.CARD, ctx.dp(12f))
-            row.setPadding(ctx.dpi(14f), ctx.dpi(8f), ctx.dpi(14f), ctx.dpi(8f))
-            row.addView(label(ctx, Names.withOctave(m), 16f, C.TEXT, Fonts.bold), lp(ctx.dpi(84f), WRAP))
-            row.addView(label(ctx, f, 16f, C.RED_HI, Fonts.bold), lp(ctx.dpi(60f), WRAP))
-            val v = ValveView(ctx); v.set(f)
-            row.addView(v, lp(ctx.dpi(96f), ctx.dpi(30f)))
-            col.addView(row, lp(MATCH, WRAP).also { it.setMargins(0, 0, 0, ctx.dpi(6f)) })
         }
     }
 
     private fun symbolsView(): View = scrollOf(ctx) { col ->
         fun item(icon: View, title: String, text: String) {
             val c = card(ctx)
-            c.addView(icon, lp(ctx.dpi(84f), ctx.dpi(64f)))
+            c.addView(icon, lp(ctx.dpi(96f), ctx.dpi(90f)))
             val tx = LinearLayout(ctx)
             tx.orientation = LinearLayout.VERTICAL
-            tx.setPadding(ctx.dpi(8f), 0, 0, 0)
-            tx.addView(label(ctx, title, 16f, C.TEXT, Fonts.bold))
-            val s = label(ctx, text, 13f, C.MUTED)
-            s.setLineSpacing(0f, 1.15f)
-            s.setPadding(0, ctx.dpi(4f), 0, 0)
-            tx.addView(s)
+            tx.setPadding(ctx.dpi(10f), 0, 0, 0)
+            tx.addView(label(ctx, title, 17f, C.TEXT, Fonts.bold))
+            tx.addView(label(ctx, text, 13f, C.MUTED).also { it.setLineSpacing(0f, 1.15f); it.setPadding(0, ctx.dpi(4f), 0, 0) })
             c.addView(tx, lp(0, WRAP, 1f))
             col.addView(c, cardLp(ctx))
         }
-        val em = "\u2003"
-        item(GlyphIcon(ctx, "\uE050", true), "Pentagrama y clave de sol", "Cinco líneas y cuatro espacios, que se cuentan de abajo hacia arriba. La clave de sol rodea la segunda línea, que es Sol. Las partes de barítono y bajo de marcha se leen en clave de sol.")
-        item(GlyphIcon(ctx, "2/4", false, false, 24f), "Compás", "Arriba, cuántos tiempos tiene cada compás. Abajo, qué figura vale un tiempo (4 es la negra). En 2/4 caben dos negras. Las barras verticales separan los compases.")
-        item(GlyphIcon(ctx, "\uE262", true), "Armadura", "Los sostenidos junto a la clave afectan a todas las notas con ese nombre en toda la pieza. En Sol mayor hay un sostenido: todos los Fa se tocan Fa#.")
-        item(GlyphIcon(ctx, "\uE1D2$em\uE1D3$em\uE1D5", true, false, 26f), "Redonda, blanca y negra", "La redonda dura 4 tiempos, la blanca 2 y la negra 1. La negra es la unidad que marca el metrónomo.")
-        item(GlyphIcon(ctx, "\uE1D7$em\uE1D9$em\uE1DB", true, false, 26f), "Corchea, semicorchea y fusa", "La corchea dura medio tiempo, la semicorchea un cuarto y la fusa un octavo. Se unen con barras: una barra para corcheas, dos para semicorcheas, tres para fusas.")
-        item(GlyphIcon(ctx, "\uE4E5$em\uE4E6$em\uE4E7", true, false, 26f), "Silencios", "Cada figura tiene su silencio con la misma duración: negra, corchea y semicorchea en la imagen. En un silencio no soples, pero sigue contando.")
-        item(GlyphIcon(ctx, "\uE4E3", true), "Silencio de compás completo", "El silencio de redonda colgado de la línea sirve para un compás entero vacío, sin importar cuántos tiempos tenga.")
-        item(GlyphIcon(ctx, "\uE1D5\uE1E7", true, false, 30f), "Puntillo", "El punto a la derecha de una nota le suma la mitad de su valor. Una negra con puntillo dura un tiempo y medio. Es muy común: corchea con puntillo más semicorchea.")
-        item(ShapeIcon(ctx, ShapeIcon.TIE), "Ligadura de unión", "Curva entre dos notas del mismo sonido: se tocan como una sola nota larga. No vuelvas a atacar la segunda.")
-        item(ShapeIcon(ctx, ShapeIcon.SLUR), "Ligadura de expresión", "Curva entre notas distintas: tócalas seguidas y suaves, sin cortar el aire entre ellas.")
-        item(ShapeIcon(ctx, ShapeIcon.TUPLET), "Tresillo", "Tres notas que se tocan en el tiempo de dos. Se marca con un 3 y una llave. Cuenta: tre-si-llo.")
-        item(GlyphIcon(ctx, "\uE262$em\uE260$em\uE261", true, false, 26f), "Sostenido, bemol y becuadro", "El sostenido sube la nota medio tono, el bemol la baja y el becuadro cancela la alteración. Vale hasta la siguiente barra de compás.")
-        item(GlyphIcon(ctx, "\uE4A0$em\uE4A2", true, false, 26f), "Acento y staccato", "El acento (>) pide atacar la nota con más fuerza. El punto sobre la nota (staccato) la pide corta y separada.")
-        item(GlyphIcon(ctx, "\uE4C0", true), "Calderón", "Alarga la nota o el silencio más de lo escrito. El director decide cuánto.")
-        item(ShapeIcon(ctx, ShapeIcon.REPEAT), "Barras de repetición", "Los dos puntos señalan la parte que se repite. Al llegar al signo de cierre, vuelve al signo de inicio y toca de nuevo ese fragmento.")
-        item(ShapeIcon(ctx, ShapeIcon.VOLTA), "Casillas 1 y 2", "Los \"puentes\" numerados. La primera vez tocas la casilla 1. Al repetir, te saltas la 1 y tocas la 2.")
-        item(GlyphIcon(ctx, "\uE047$em\uE048", true, false, 26f), "Segno y Coda", "El segno marca un punto al que se vuelve con D.S. (del signo). La coda es un final aparte: al llegar a \"Al segno y coda\" vuelves al signo y, en la señal de coda, saltas al final.")
-        item(GlyphIcon(ctx, "D.C.", false, false, 22f), "D.C. y Fine", "D.C. significa volver al principio. Fine es el final: \"D.C. al Fine\" es volver al inicio y terminar donde dice Fine.")
-        item(GlyphIcon(ctx, "\uE52D$em\uE52F", true, false, 26f), "Matices", "mf es medio fuerte, ff es muy fuerte. El crescendo (una abertura creciente) pide ir aumentando el volumen poco a poco.")
-        item(ShapeIcon(ctx, ShapeIcon.HAIRPIN), "Crescendo", "Las líneas que se abren indican que debes subir la intensidad. Si se cierran, es diminuendo: bajar.")
-        item(GlyphIcon(ctx, "A", false, true, 20f), "Letras de ensayo", "Las letras en cuadro (A, B, C) son marcas para ubicarse cuando el director dice \"desde la B\".")
-        item(GlyphIcon(ctx, "0 1 2 3", false, false, 16f), "Pistones", "Sobre cada nota la app escribe qué pistones presionar. 0 es sin pistones, 12 es el primero y el segundo juntos, y así con las demás combinaciones.")
+        fun g(code: String, size: Float = 46f) = GlyphIcon(ctx, code, true, false, size)
+        item(g("\uE050", 50f), "Clave de sol", "Rodea la segunda línea del pentagrama, que es Sol. Las partes de bajo, barítono, trompeta y saxofón se leen en clave de sol.")
+        item(GlyphIcon(ctx, "2/4", false, false, 30f), "Compás", "Arriba, cuántos tiempos tiene cada compás. Abajo, qué figura vale un tiempo (4 es la negra). Las barras verticales separan los compases.")
+        item(g("\uE262"), "Sostenido", "Sube la nota medio tono. Si aparece al inicio, en la armadura, vale para toda la pieza.")
+        item(g("\uE260"), "Bemol", "Baja la nota medio tono. En la armadura vale para todas las notas con ese nombre.")
+        item(g("\uE261"), "Becuadro", "Cancela el sostenido o el bemol. La nota vuelve a ser natural hasta la siguiente barra.")
+        item(g("\uE1D2"), "Redonda", "Dura 4 tiempos. Es la nota más larga de uso común.")
+        item(g("\uE1D3"), "Blanca", "Dura 2 tiempos, la mitad de una redonda.")
+        item(g("\uE1D5"), "Negra", "Dura 1 tiempo. Es la unidad que marca el metrónomo.")
+        item(g("\uE1D7"), "Corchea", "Dura medio tiempo. Dos corcheas se unen con una barra.")
+        item(g("\uE1D9"), "Semicorchea", "Dura un cuarto de tiempo. Cuatro semicorcheas llenan una negra. Lleva dos barras.")
+        item(g("\uE1DB"), "Fusa", "Dura un octavo de tiempo. Lleva tres barras.")
+        item(g("\uE1DD"), "Semifusa", "Dura un dieciseisavo de tiempo. Lleva cuatro barras. Aparece en pasajes muy rápidos.")
+        item(g("\uE4E3"), "Silencio de redonda", "Silencio de 4 tiempos. Colgado de la cuarta línea, también indica un compás entero en silencio.")
+        item(g("\uE4E4"), "Silencio de blanca", "Silencio de 2 tiempos. Se apoya sobre la tercera línea.")
+        item(g("\uE4E5"), "Silencio de negra", "Silencio de 1 tiempo. Durante un silencio no soples, pero sigue contando.")
+        item(g("\uE4E6"), "Silencio de corchea", "Silencio de medio tiempo.")
+        item(g("\uE4E7"), "Silencio de semicorchea", "Silencio de un cuarto de tiempo.")
+        item(g("\uE1D5\uE1E7"), "Puntillo", "Suma la mitad del valor. Una negra con puntillo dura un tiempo y medio.")
+        item(ShapeIcon(ctx, ShapeIcon.TIE), "Ligadura de unión", "Une dos notas del mismo sonido: se tocan como una sola nota larga.")
+        item(ShapeIcon(ctx, ShapeIcon.SLUR), "Ligadura de expresión", "Une notas distintas: tócalas seguidas y suaves, sin cortar el aire.")
+        item(ShapeIcon(ctx, ShapeIcon.TUPLET), "Tresillo", "Tres notas que se tocan en el tiempo de dos. Cuenta: tre-si-llo.")
+        item(g("\uE4A0"), "Acento", "Ataca esa nota con más fuerza que las demás.")
+        item(g("\uE4A2"), "Staccato", "El punto pide una nota corta y separada.")
+        item(g("\uE4C0"), "Calderón", "Alarga la nota o el silencio más de lo escrito. Lo decide el director.")
+        item(ShapeIcon(ctx, ShapeIcon.REPEAT), "Barras de repetición", "Al llegar al signo de cierre, vuelve al signo de inicio y toca otra vez ese fragmento.")
+        item(ShapeIcon(ctx, ShapeIcon.VOLTA), "Casillas 1 y 2", "Los puentes numerados. La primera vez tocas la casilla 1; al repetir, saltas a la 2.")
+        item(g("\uE047"), "Segno", "Punto al que se vuelve cuando la partitura dice D.S. (del signo).")
+        item(g("\uE048"), "Coda", "Un final aparte. En la señal de coda saltas a la sección marcada con el mismo signo.")
+        item(GlyphIcon(ctx, "D.C.", false, false, 26f), "D.C. y Fine", "D.C. es volver al principio. Fine marca el final: \"D.C. al Fine\" es volver al inicio y terminar en Fine.")
+        item(g("\uE520"), "Piano", "Suave.")
+        item(g("\uE52D"), "Mezzoforte", "Medio fuerte: el volumen normal de la banda.")
+        item(g("\uE522"), "Forte", "Fuerte.")
+        item(g("\uE52F"), "Fortissimo", "Muy fuerte.")
+        item(ShapeIcon(ctx, ShapeIcon.HAIRPIN), "Crescendo", "Las líneas que se abren piden subir el volumen poco a poco. Si se cierran, es diminuendo.")
+        item(GlyphIcon(ctx, "A", false, true, 22f), "Letras de ensayo", "Las letras en cuadro sirven para ubicarse cuando el director dice \"desde la B\".")
+    }
+}
+
+// ====================== TABLA DE DIGITACION ======================
+
+class ChartView(private val host: Host) : LinearLayout(host as Context) {
+    private val ctx: Context = host as Context
+    private val list = LinearLayout(ctx)
+    private var instIdx = host.prefs.getInt("lib_inst", 0).coerceIn(0, 4)
+
+    init {
+        orientation = VERTICAL
+        setPadding(ctx.dpi(16f), 0, ctx.dpi(16f), 0)
+        addView(pickRow(ctx, Insts.practice.map { it.name }, instIdx) { instIdx = it; fill() }, lp(MATCH, WRAP).also { it.bottomMargin = ctx.dpi(8f) })
+        val sv = ScrollView(ctx)
+        list.orientation = VERTICAL
+        sv.addView(list)
+        addView(sv, lp(MATCH, 0, 1f))
+        fill()
+    }
+
+    private fun fill() {
+        list.removeAllViews()
+        val inst = Insts.practice[instIdx]
+        val info = when (inst.fam) {
+            1 -> "Nota escrita para saxo alto en Mi bemol. 8 es la llave de octava, 1 2 3 la mano izquierda y 4 5 6 la derecha. Toca una fila para escucharla."
+            3 -> "Trombón en clave de fa. El número es la posición de la vara, de 1 (recogida) a 7 (extendida). Toca una fila para escucharla."
+            4 -> "Tuba en Si bemol en clave de fa. Con 0 no presionas ningún pistón. Toca una fila para escucharla."
+            else -> "Nota escrita en clave de sol para instrumento en Si bemol. Con 0 no presionas nada. Toca una fila para escucharla."
+        }
+        list.addView(label(ctx, info, 13f, C.MUTED).also { it.setPadding(0, 0, 0, ctx.dpi(10f)) })
+        for (m in inst.high downTo inst.low) {
+            val f = Fingering.label(inst, m) ?: continue
+            val row = LinearLayout(ctx)
+            row.gravity = Gravity.CENTER_VERTICAL
+            row.background = roundRect(C.CARD, ctx.dp(12f))
+            row.setPadding(ctx.dpi(14f), ctx.dpi(8f), ctx.dpi(14f), ctx.dpi(8f))
+            row.addView(label(ctx, Names.withOctave(m), 16f, C.TEXT, Fonts.bold), lp(ctx.dpi(78f), WRAP))
+            row.addView(label(ctx, if (inst.fam == 3) "Posición $f" else f, if (inst.fam == 1) 12f else 16f, C.RED_HI, Fonts.bold), lp(0, WRAP, 1f))
+            val fv = FingerView(ctx); fv.set(inst, m)
+            row.addView(fv, lp(if (inst.fam == 1 || inst.fam == 3) ctx.dpi(150f) else ctx.dpi(96f), ctx.dpi(34f)))
+            row.tap { host.synth.play(inst.sample, soundOf(inst, m)) }
+            list.addView(row, lp(MATCH, WRAP).also { it.setMargins(0, 0, 0, ctx.dpi(6f)) })
+        }
     }
 }
 
@@ -380,22 +450,40 @@ class LearnTab(private val host: Host, private val songs: List<SongInfo>, privat
 
 class ExplorerView(private val host: Host) : LinearLayout(host as Context) {
     private val ctx: Context = host as Context
-    private var pos = 5       // Do5
+    private var pos = 5
     private var alter = 0
+    private var instIdx = host.prefs.getInt("lib_inst", 0).coerceIn(0, 4)
     private val staff = Staff(ctx)
-    private val nameV = label(ctx, "", 34f, C.TEXT, Fonts.bold)
+    private val nameV = label(ctx, "", 32f, C.TEXT, Fonts.bold)
     private val infoV = label(ctx, "", 13f, C.MUTED)
-    private val valve = ValveView(ctx)
-    private val fingV = label(ctx, "", 30f, C.RED_HI, Fonts.bold)
+    private val finger = FingerView(ctx)
+    private val accChips = ArrayList<Chip>()
     private val SEMI = intArrayOf(0, 2, 4, 5, 7, 9, 11)
+    private val minPos = -9
+    private val maxPos = 17
 
     init {
         orientation = VERTICAL
-        setPadding(ctx.dpi(16f), 0, ctx.dpi(16f), ctx.dpi(16f))
-        val hint = label(ctx, "Toca una línea o un espacio del pentagrama para colocar la nota.", 13f, C.MUTED)
-        hint.setPadding(0, 0, 0, ctx.dpi(10f))
-        addView(hint)
-        addView(staff, lp(MATCH, 0, 1f))
+        setPadding(ctx.dpi(16f), 0, ctx.dpi(16f), ctx.dpi(14f))
+        addView(pickRow(ctx, Insts.practice.map { it.name }, instIdx) { instIdx = it; host.prefs.edit().putInt("lib_inst", it).apply(); update(true) })
+        val mid = LinearLayout(ctx)
+        mid.gravity = Gravity.CENTER_VERTICAL
+        mid.addView(staff, lp(0, MATCH, 1f))
+        val arrows = LinearLayout(ctx)
+        arrows.orientation = VERTICAL
+        arrows.gravity = Gravity.CENTER
+        fun arrow(kind: Int, d: Int) {
+            val b = FrameLayout(ctx)
+            b.background = roundRect(C.CARD2, ctx.dp(18f))
+            b.addView(IconView(ctx, kind).also { it.color = C.RED_HI }, FrameLayout.LayoutParams(ctx.dpi(34f), ctx.dpi(34f), Gravity.CENTER))
+            b.tap { move(d) }
+            arrows.addView(b, lp(ctx.dpi(64f), ctx.dpi(64f)).also { it.setMargins(0, ctx.dpi(6f), 0, ctx.dpi(6f)) })
+        }
+        arrow(IconView.UP, 1)
+        arrow(IconView.DOWN, -1)
+        mid.addView(arrows, lp(WRAP, MATCH))
+        addView(mid, lp(MATCH, 0, 1f).also { it.topMargin = ctx.dpi(8f) })
+
         val row = LinearLayout(ctx)
         row.gravity = Gravity.CENTER_VERTICAL
         row.background = roundRect(C.CARD, ctx.dp(18f))
@@ -405,101 +493,96 @@ class ExplorerView(private val host: Host) : LinearLayout(host as Context) {
         left.addView(nameV)
         left.addView(infoV)
         row.addView(left, lp(0, WRAP, 1f))
-        val right = LinearLayout(ctx)
-        right.orientation = VERTICAL
-        right.gravity = Gravity.CENTER_HORIZONTAL
-        right.addView(fingV, lp(WRAP, WRAP))
-        right.addView(valve, lp(ctx.dpi(100f), ctx.dpi(34f)))
-        row.addView(right, lp(WRAP, WRAP))
-        addView(row, lp(MATCH, WRAP).also { it.topMargin = ctx.dpi(12f) })
+        row.addView(finger, lp(ctx.dpi(150f), ctx.dpi(44f)))
+        row.tap { update(true) }
+        addView(row, lp(MATCH, WRAP).also { it.topMargin = ctx.dpi(10f) })
 
         val acc = LinearLayout(ctx)
         acc.gravity = Gravity.CENTER
-        val chips = ArrayList<Chip>()
         val labels = arrayOf("Bemol", "Natural", "Sostenido")
         val vals = intArrayOf(-1, 0, 1)
         for (i in 0 until 3) {
             val ch = Chip(ctx, labels[i]); ch.setActive(vals[i] == alter)
-            ch.tap { alter = vals[i]; for ((k, c) in chips.withIndex()) c.setActive(k == i); update(true) }
-            chips.add(ch)
+            ch.tap { alter = vals[i]; refreshAcc(); update(true) }
+            accChips.add(ch)
             acc.addView(ch, lp(WRAP, WRAP).also { it.setMargins(ctx.dpi(4f), 0, ctx.dpi(4f), 0) })
         }
-        addView(acc, lp(MATCH, WRAP).also { it.topMargin = ctx.dpi(12f) })
+        addView(acc, lp(MATCH, WRAP).also { it.topMargin = ctx.dpi(10f) })
         update(false)
     }
 
+    private fun refreshAcc() { val vals = intArrayOf(-1, 0, 1); for ((i, c) in accChips.withIndex()) c.setActive(vals[i] == alter) }
+
+    private fun move(d: Int) {
+        pos = (pos + d).coerceIn(minPos, maxPos)
+        alter = 0; refreshAcc()
+        update(true)
+    }
+
+    private fun baseDia() = if (Insts.practice[instIdx].bass) 18 else 30
+
     private fun midiOf(): Int {
-        val d = pos + 30
-        val oct = Math.floorDiv(d, 7)
-        val letter = Math.floorMod(d, 7)
-        return 12 * (oct + 1) + SEMI[letter] + alter
+        val d = pos + baseDia()
+        return 12 * (Math.floorDiv(d, 7) + 1) + SEMI[Math.floorMod(d, 7)] + alter
     }
 
     private fun update(sound: Boolean) {
+        val inst = Insts.practice[instIdx]
         val m = midiOf()
         val letters = arrayOf("Do", "Re", "Mi", "Fa", "Sol", "La", "Si")
-        val d = pos + 30
-        val nm = letters[Math.floorMod(d, 7)] + (if (alter == 1) "#" else if (alter == -1) "b" else "") + Math.floorDiv(d, 7)
-        nameV.text = nm
-        val f = Fingering.forMidi(m)
-        fingV.text = f ?: "?"
-        valve.set(f)
-        infoV.text = if (f == null) "Fuera del rango del bajo" else "Pistones: $f"
-        staff.pos = pos; staff.alter = alter
+        val d = pos + baseDia()
+        nameV.text = letters[Math.floorMod(d, 7)] + (if (alter == 1) "#" else if (alter == -1) "b" else "") + Math.floorDiv(d, 7)
+        val f = Fingering.label(inst, m)
+        finger.set(inst, m)
+        val sounds = Names.withOctave(soundOf(inst, m))
+        infoV.text = if (f == null) "Fuera del rango del ${inst.short.lowercase()} · suena $sounds" else (when (inst.fam) { 1 -> "Llaves: $f"; 3 -> "Posición de vara: $f"; else -> "Pistones: $f" }) + " · suena $sounds"
         staff.invalidate()
-        if (sound && f != null) host.synth.beep(midiToFreq((m - 2).toDouble()))
+        if (sound && f != null) host.synth.play(inst.sample, soundOf(inst, m))
     }
 
     private inner class Staff(ctx: Context) : View(ctx) {
-        var pos = 5
-        var alter = 0
         private val p = Paint(Paint.ANTI_ALIAS_FLAG)
-
-        private fun sp() = min(height / 11f, width / 14f)
+        private fun sp() = min(height / 17f, width / 10f)
 
         override fun onDraw(c: Canvas) {
             val sp = sp()
-            val cx = width / 2f
+            val cx = width * 0.58f
             val top = height / 2f - sp * 2f
             val bottomY = top + sp * 4
             p.style = Paint.Style.STROKE
             p.strokeWidth = sp * 0.1f
             p.color = C.MUTED
-            for (k in 0 until 5) c.drawLine(sp, top + k * sp, width - sp, top + k * sp, p)
+            for (k in 0 until 5) c.drawLine(sp * 0.3f, top + k * sp, width - sp * 0.3f, top + k * sp, p)
             p.style = Paint.Style.FILL
             p.typeface = Fonts.music
             p.textSize = sp * 4
             p.color = C.TEXT
             p.textAlign = Paint.Align.LEFT
-            c.drawText("\uE050", sp * 1.2f, top + 3 * sp, p)
-            val y = bottomY - pos * sp / 2f
+            if (Insts.practice[instIdx].bass) c.drawText("\uE062", sp * 0.5f, top + sp, p) else c.drawText("\uE050", sp * 0.5f, top + 3 * sp, p)
+            val y = bottomY - this@ExplorerView.pos * sp / 2f
             p.style = Paint.Style.STROKE
             p.color = C.MUTED
-            if (pos <= -2) { var q = -2; while (q >= pos) { c.drawLine(cx - sp * 1.2f, bottomY - q * sp / 2f, cx + sp * 1.2f, bottomY - q * sp / 2f, p); q -= 2 } }
-            if (pos >= 10) { var q = 10; while (q <= pos) { c.drawLine(cx - sp * 1.2f, bottomY - q * sp / 2f, cx + sp * 1.2f, bottomY - q * sp / 2f, p); q += 2 } }
+            val pp = this@ExplorerView.pos
+            if (pp <= -2) { var q = -2; while (q >= pp) { c.drawLine(cx - sp * 1.2f, bottomY - q * sp / 2f, cx + sp * 1.2f, bottomY - q * sp / 2f, p); q -= 2 } }
+            if (pp >= 10) { var q = 10; while (q <= pp) { c.drawLine(cx - sp * 1.2f, bottomY - q * sp / 2f, cx + sp * 1.2f, bottomY - q * sp / 2f, p); q += 2 } }
             p.style = Paint.Style.FILL
             p.color = C.RED_HI
             c.drawText("\uE0A4", cx - sp * 0.59f, y, p)
-            if (alter != 0) c.drawText(if (alter == 1) "\uE262" else "\uE260", cx - sp * 1.9f, y, p)
-            p.color = C.TEXT
-            val up = pos < 4
-            val sx = if (up) cx + sp * 0.59f - sp * 0.06f else cx - sp * 0.59f + sp * 0.06f
+            val al = this@ExplorerView.alter
+            if (al != 0) c.drawText(if (al == 1) "\uE262" else "\uE260", cx - sp * 1.9f, y, p)
+            val up = pp < 4
+            val sx = if (up) cx + sp * 0.53f else cx - sp * 0.53f
             p.style = Paint.Style.STROKE
             p.strokeWidth = sp * 0.12f
-            p.color = C.RED_HI
             c.drawLine(sx, y, sx, if (up) y - sp * 3.5f else y + sp * 3.5f, p)
         }
 
         override fun onTouchEvent(e: MotionEvent): Boolean {
             val sp = sp()
-            val top = height / 2f - sp * 2f
-            val bottomY = top + sp * 4
-            val np = ((bottomY - e.y) / (sp / 2f)).roundToInt().coerceIn(-4, 12)
-            when (e.actionMasked) {
-                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
-                    if (np != this@ExplorerView.pos) { this@ExplorerView.pos = np; this@ExplorerView.update(false) }
-                }
-                MotionEvent.ACTION_UP -> { this@ExplorerView.pos = np; this@ExplorerView.update(true); performClick() }
+            val bottomY = height / 2f + sp * 2f
+            val np = ((bottomY - e.y) / (sp / 2f)).roundToInt().coerceIn(minPos, maxPos)
+            if (e.actionMasked == MotionEvent.ACTION_UP) {
+                this@ExplorerView.pos = np; this@ExplorerView.alter = 0; refreshAcc(); update(true); performClick()
             }
             return true
         }
@@ -515,7 +598,6 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
     private val songs = Library.index(ctx)
     private val content = FrameLayout(ctx)
     private val detail = FrameLayout(ctx)
-    private val navItems = ArrayList<LinearLayout>()
     private val navIcons = ArrayList<IconView>()
     private val navLabels = ArrayList<TextView>()
     private var tab = host.prefs.getInt("tab", 0).coerceIn(0, 1)
@@ -530,29 +612,35 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
 
         val header = LinearLayout(ctx)
         header.gravity = Gravity.CENTER_VERTICAL
-        header.setPadding(ctx.dpi(16f), ctx.dpi(10f), ctx.dpi(16f), ctx.dpi(10f))
-        header.addView(logoView(ctx, 28f))
+        header.setPadding(ctx.dpi(18f), ctx.dpi(12f), ctx.dpi(18f), ctx.dpi(8f))
+        header.addView(logoView(ctx, 22f))
         header.addView(View(ctx), lp(0, 1, 1f))
-        header.addView(label(ctx, "ART STAR", 15f, C.MUTED, Fonts.bold))
+        val about = FrameLayout(ctx)
+        about.background = roundRect(C.MUTED, ctx.dp(14f))
+        about.addView(label(ctx, "i", 15f, C.BG, Fonts.bold), FrameLayout.LayoutParams(WRAP, WRAP, Gravity.CENTER))
+        about.tap { showAbout() }
+        header.addView(about, lp(ctx.dpi(28f), ctx.dpi(28f)))
         root.addView(header, lp(MATCH, WRAP))
         root.addView(content, lp(MATCH, 0, 1f))
 
         val nav = LinearLayout(ctx)
-        nav.setBackgroundColor(C.BG)
+        nav.setPadding(0, ctx.dpi(4f), 0, ctx.dpi(6f))
         val names = arrayOf("Partituras", "Aprender", "Metrónomo", "Afinador")
         val kinds = intArrayOf(IconView.NOTE, IconView.LEARN, IconView.METRO, IconView.TUNER)
         for (i in 0 until 4) {
             val item = LinearLayout(ctx)
             item.orientation = LinearLayout.VERTICAL
-            item.gravity = Gravity.CENTER
+            item.gravity = Gravity.CENTER_HORIZONTAL
             val ic = IconView(ctx, kinds[i])
             item.addView(ic, lp(ctx.dpi(30f), ctx.dpi(30f)))
             val tv = label(ctx, names[i], 11.5f, C.MUTED, Fonts.medium)
+            tv.gravity = Gravity.CENTER
+            tv.maxLines = 1
             tv.setPadding(0, ctx.dpi(3f), 0, 0)
-            item.addView(tv)
+            item.addView(tv, lp(MATCH, WRAP))
             item.tap { select(i) }
-            navItems.add(item); navIcons.add(ic); navLabels.add(tv)
-            nav.addView(item, lp(0, ctx.dpi(60f), 1f))
+            navIcons.add(ic); navLabels.add(tv)
+            nav.addView(item, lp(0, ctx.dpi(58f), 1f))
         }
         root.addView(nav, lp(MATCH, WRAP))
         addView(detail, LayoutParams(MATCH, MATCH))
@@ -560,12 +648,31 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
         select(tab)
     }
 
+    private fun showAbout() {
+        val d = Dialog(ctx)
+        d.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val box = LinearLayout(ctx)
+        box.orientation = LinearLayout.VERTICAL
+        box.setPadding(ctx.dpi(24f), ctx.dpi(22f), ctx.dpi(24f), ctx.dpi(12f))
+        box.background = roundRect(C.CARD, ctx.dp(22f))
+        box.addView(label(ctx, "Acerca de ART STAR", 20f, C.TEXT, Fonts.bold))
+        val text = "ART STAR " + BuildConfigLite.VERSION + " por DigitalMinds. Partituras de banda que se desplazan con la digitación de cada nota, banda de acompañamiento, metrónomo, afinador y ejercicios para aprender a leer música. Sin anuncios y sin internet.\n\n" +
+            "Sonidos de instrumentos: FluidR3 GM de Frank Wen, licencia CC BY 3.0. Fuentes: Space Grotesk y Bravura, licencia SIL OFL."
+        box.addView(label(ctx, text, 15f, C.TEXT).also { it.setLineSpacing(0f, 1.2f); it.setPadding(0, ctx.dpi(12f), 0, ctx.dpi(8f)) })
+        val ok = label(ctx, "OK", 16f, C.RED_HI, Fonts.bold)
+        ok.setPadding(ctx.dpi(16f), ctx.dpi(12f), ctx.dpi(4f), ctx.dpi(8f))
+        ok.tap { d.dismiss() }
+        box.addView(ok, lp(WRAP, WRAP).also { it.gravity = Gravity.END })
+        d.setContentView(box)
+        d.window?.setBackgroundDrawable(ColorDrawable(0))
+        d.show()
+    }
+
     private fun select(i: Int) {
-        if (i > 1) { /* pestañas con micrófono o audio no se recuerdan */ } else host.prefs.edit().putInt("tab", i).apply()
+        if (i <= 1) host.prefs.edit().putInt("tab", i).apply()
         tab = i
         hideDetail()
-        metro?.deactivate()
-        tuner?.deactivate()
+        metro?.deactivate(); tuner?.deactivate()
         content.removeAllViews()
         when (i) {
             0 -> content.addView(LibraryTab(host, songs, open), LayoutParams(MATCH, MATCH))
@@ -574,9 +681,8 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
             3 -> { val t = TunerTab(host); tuner = t; content.addView(t, LayoutParams(MATCH, MATCH)); t.activate() }
         }
         for (k in 0 until 4) {
-            val on = k == i
-            navIcons[k].color = if (on) C.RED_HI else C.MUTED
-            navLabels[k].setTextColor(if (on) C.TEXT else C.MUTED)
+            navIcons[k].color = if (k == i) C.RED_HI else C.MUTED
+            navLabels[k].setTextColor(if (k == i) C.TEXT else C.MUTED)
         }
     }
 
@@ -586,10 +692,7 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
         detail.visibility = VISIBLE
     }
 
-    private fun hideDetail() {
-        detail.visibility = GONE
-        detail.removeAllViews()
-    }
+    private fun hideDetail() { detail.visibility = GONE; detail.removeAllViews() }
 
     fun handleBack(): Boolean {
         if (detail.visibility == VISIBLE) { hideDetail(); return true }
@@ -597,8 +700,7 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
         return false
     }
 
-    fun onLeave() {
-        metro?.deactivate()
-        tuner?.deactivate()
-    }
+    fun onLeave() { metro?.deactivate(); tuner?.deactivate() }
 }
+
+object BuildConfigLite { const val VERSION = "1.4" }

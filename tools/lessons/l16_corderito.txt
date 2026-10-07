@@ -1,0 +1,20 @@
+id: l16_corderito
+title: María tenía un corderito
+subtitle: Canciones
+cat: lesson
+group: Canciones
+desc: Canción infantil tradicional con solo tres notas al inicio: Mi, Re y Do. Perfecta para empezar.
+meta: 4/4
+time: 4/4
+key: 0
+bpm: 96
+part: bar1 | Barítono | key=0 | inst=bar
+sys
+1: q:E4 q:D4 q:C4 q:D4
+2: q:E4 q:E4 h:E4
+3: q:D4 q:D4 h:D4
+4: q:E4 q:G4 h:G4
+5: q:E4 q:D4 q:C4 q:D4
+6: q:E4 q:E4 q:E4 q:E4
+7: q:D4 q:D4 q:E4 q:D4
+8: w:C4

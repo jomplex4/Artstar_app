@@ -52,6 +52,8 @@ class MetronomeTab(private val host: Host) : FrameLayout(host as Context) {
     private val beatsOf = intArrayOf(2, 3, 4, 2)
     private val subOf = intArrayOf(1, 1, 1, 3)
     private val sigChips = ArrayList<Chip>()
+    private var subIdx = host.prefs.getInt("metro_subdiv", 0)
+    private var accent = host.prefs.getBoolean("metro_accent", true)
 
     private val poll = object : Runnable {
         override fun run() {
@@ -94,6 +96,10 @@ class MetronomeTab(private val host: Host) : FrameLayout(host as Context) {
             sg.addView(ch, lp(WRAP, WRAP).also { it.setMargins(ctx.dpi(5f), 0, ctx.dpi(5f), 0) })
         }
         col.addView(sg, lp(MATCH, WRAP))
+        col.addView(pickRow(ctx, listOf("Negras", "Corcheas", "Tresillos", "Semicorcheas"), subIdx) { subIdx = it; host.prefs.edit().putInt("metro_subdiv", it).apply(); applySub() },
+            lp(WRAP, WRAP).also { it.topMargin = ctx.dpi(12f) })
+        col.addView(pickRow(ctx, listOf("Acento en el 1", "Sin acento"), if (accent) 0 else 1) { accent = it == 0; host.prefs.edit().putBoolean("metro_accent", accent).apply(); host.synth.metroAccent = accent },
+            lp(WRAP, WRAP).also { it.topMargin = ctx.dpi(8f) })
 
         col.addView(View0(), lp(MATCH, 0, 0.5f))
         playBtn.background = roundRect(C.RED, ctx.dp(40f))
@@ -122,11 +128,15 @@ class MetronomeTab(private val host: Host) : FrameLayout(host as Context) {
         host.prefs.edit().putInt("metro_sig", i).apply()
         for ((k, c) in sigChips.withIndex()) c.setActive(k == i)
         host.synth.metroBeats = beatsOf[i]
-        host.synth.metroSub = subOf[i]
+        applySub()
         dots.count = beatsOf[i]
         dots.active = -1
         refresh()
         if (running) { host.synth.metroOn = false; host.synth.metroOn = true }
+    }
+
+    private fun applySub() {
+        host.synth.metroSub = if (sigIdx == 3) 3 else intArrayOf(1, 2, 3, 4)[subIdx]
     }
 
     private fun refresh() {
@@ -146,7 +156,8 @@ class MetronomeTab(private val host: Host) : FrameLayout(host as Context) {
         val s = host.synth
         s.metroBpm = bpm
         s.metroBeats = beatsOf[sigIdx]
-        s.metroSub = subOf[sigIdx]
+        s.metroAccent = accent
+        applySub()
         s.metroOn = running
         if (running) { lastTick = s.metroTick; handler.post(poll) } else { dots.active = -1; handler.removeCallbacks(poll) }
         drawPlay()
@@ -217,6 +228,56 @@ class CentsBar(ctx: Context) : android.view.View(ctx) {
     }
 }
 
+/** Medidor de nivel en arco de barritas. Las barritas encendidas por encima del limite se pintan de rojo. */
+class DbArc(ctx: Context) : android.view.View(ctx) {
+    private val bars = 36
+    private val redFrom = 28          // desde esta barrita el sonido ya es demasiado fuerte
+    private var shown = 0f
+    private var peak = 0f
+    private var db = 0
+    private val p = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    /** rms de 0 a 1. Se convierte a una escala relativa de 0 a 100. */
+    fun setLevel(rms: Float) {
+        val v = (20.0 * Math.log10(max(rms.toDouble(), 1e-6)) + 90.0).coerceIn(0.0, 100.0).toFloat()
+        shown = if (v > shown) v else shown * 0.8f + v * 0.2f
+        if (shown > peak) peak = shown else peak = max(0f, peak - 0.6f)
+        db = Math.round(shown)
+        invalidate()
+    }
+
+    fun reset() { shown = 0f; peak = 0f; db = 0; invalidate() }
+
+    override fun onDraw(c: Canvas) {
+        val w = width.toFloat(); val h = height.toFloat()
+        val cx = w / 2f
+        val cy = h * 0.92f
+        val rOut = min(w * 0.46f, h * 0.88f)
+        val rIn = rOut * 0.72f
+        val lit = (shown / 100f * bars).toInt().coerceIn(0, bars)
+        val pk = (peak / 100f * bars).toInt().coerceIn(0, bars - 1)
+        p.strokeCap = Paint.Cap.ROUND
+        p.strokeWidth = rOut * 0.055f
+        for (i in 0 until bars) {
+            val ang = Math.toRadians(180.0 + 180.0 * (i + 0.5) / bars)
+            val ca = Math.cos(ang).toFloat(); val sa = Math.sin(ang).toFloat()
+            val on = i < lit || i == pk && peak > 3f
+            p.color = if (!on) C.CARD2 else if (i >= redFrom) C.RED_HI else C.TEXT
+            c.drawLine(cx + ca * rIn, cy + sa * rIn, cx + ca * rOut, cy + sa * rOut, p)
+        }
+        p.style = Paint.Style.FILL
+        p.textAlign = Paint.Align.CENTER
+        p.typeface = Fonts.bold
+        p.color = if (lit >= redFrom) C.RED_HI else C.TEXT
+        p.textSize = rOut * 0.32f
+        c.drawText(db.toString(), cx, cy - rOut * 0.2f, p)
+        p.typeface = Fonts.medium
+        p.color = C.MUTED
+        p.textSize = rOut * 0.13f
+        c.drawText("dB", cx, cy - rOut * 0.03f, p)
+    }
+}
+
 class TunerTab(private val host: Host) : FrameLayout(host as Context) {
     private val ctx: Context = host as Context
     private var a4 = host.prefs.getInt("a4", 440)
@@ -230,9 +291,14 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
     private val writtenV = label(ctx, "", 15f, C.TEXT, Fonts.medium)
     private val statusV = label(ctx, "", 13f, C.MUTED)
     private val bar = CentsBar(ctx)
+    private val arc = DbArc(ctx)
     private val refV = label(ctx, "", 15f, C.TEXT, Fonts.medium)
     private val handler = Handler(Looper.getMainLooper())
     private val fade = Runnable { if (System.currentTimeMillis() - lastVoiced > 600) showIdle() }
+    private var instSel = host.prefs.getInt("tuner_inst", 1)
+    private val instNames = listOf("Sonido real", "Si bemol (bajo, trompeta)", "Mi bemol (saxo alto)")
+    private val instShift = intArrayOf(0, 2, 9)
+    private var stableSince = 0L
 
     init {
         val col = LinearLayout(ctx)
@@ -240,7 +306,9 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
         col.gravity = Gravity.CENTER_HORIZONTAL
         col.setPadding(ctx.dpi(20f), ctx.dpi(10f), ctx.dpi(20f), ctx.dpi(10f))
         addView(col, LayoutParams(MATCH, MATCH))
-        col.addView(android.view.View(ctx), lp(MATCH, 0, 0.5f))
+        col.addView(pickRow(ctx, instNames, instSel) { instSel = it; host.prefs.edit().putInt("tuner_inst", it).apply() }, lp(WRAP, WRAP).also { it.topMargin = ctx.dpi(6f) })
+        col.addView(arc, lp(MATCH, ctx.dpi(150f)).also { it.topMargin = ctx.dpi(10f) })
+        col.addView(android.view.View(ctx), lp(MATCH, 0, 0.25f))
         val nrow = LinearLayout(ctx)
         nrow.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         nrow.addView(noteV, lp(WRAP, WRAP))
@@ -264,7 +332,7 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
         ref.addView(plus)
         col.addView(ref, lp(WRAP, WRAP))
         val play = Chip(ctx, "Escuchar el La de referencia")
-        play.tap { host.synth.beep(a4.toDouble()) }
+        play.tap { host.synth.play("clarinet", 69, 1500) }
         col.addView(play, lp(WRAP, WRAP).also { it.topMargin = ctx.dpi(12f) })
         col.addView(android.view.View(ctx), lp(MATCH, 0, 0.3f))
         setA4(a4)
@@ -300,12 +368,14 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
         active = false
         detector?.stop()
         detector = null
+        arc.reset()
         handler.removeCallbacks(fade)
     }
 
     private fun onFrame(f: PitchFrame) {
         if (!active) return
-        if (!f.voiced) { handler.postDelayed(fade, 650); return }
+        arc.setLevel(f.level)
+        if (!f.voiced) { stableSince = System.currentTimeMillis(); handler.postDelayed(fade, 650); return }
         lastVoiced = System.currentTimeMillis()
         val nearest = Math.round(f.midi)
         noteV.text = Names.pitchClass(nearest)
@@ -315,10 +385,13 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
         bar.cents = smoothCents
         bar.live = true
         val c = smoothCents
-        statusV.text = if (abs(c) <= 5f) "Afinado" else if (c > 0) "Alto: baja un poco (${c.toInt()} centésimas)" else "Bajo: sube un poco (${(-c).toInt()} centésimas)"
-        statusV.setTextColor(if (abs(c) <= 5f) C.TEXT else C.MUTED)
-        // el instrumento esta en Si bemol: la nota escrita es un tono mas alta que la que suena
-        writtenV.text = "Suena " + Names.pitchClass(nearest) + ". Lo lees como " + Names.pitchClass(nearest + 2) + " en la partitura."
+        val now = System.currentTimeMillis()
+        if (abs(c) > 5f) stableSince = now
+        val tuned = abs(c) <= 5f && now - stableSince > 350
+        statusV.text = if (tuned) "Afinado" else if (c > 0) "Alto: baja un poco (${c.toInt()} centésimas)" else "Bajo: sube un poco (${(-c).toInt()} centésimas)"
+        statusV.setTextColor(if (tuned) C.TEXT else C.MUTED)
+        writtenV.text = if (instSel == 0) "Nota real: " + Names.withOctave(nearest)
+            else "Suena " + Names.pitchClass(nearest) + ". En tu partitura es " + Names.pitchClass(nearest + instShift[instSel]) + "."
         handler.removeCallbacks(fade)
         handler.postDelayed(fade, 900)
     }

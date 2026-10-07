@@ -1,0 +1,21 @@
+id: l15_cumpleanos
+title: Cumpleaños feliz
+subtitle: Canciones
+cat: lesson
+group: Canciones
+desc: La melodía más conocida del mundo, en compás de 3/4. Empieza con dos notas de anacrusa antes del primer tiempo fuerte.
+meta: 3/4
+time: 3/4
+key: 0
+bpm: 92
+part: bar1 | Barítono | key=0 | inst=bar
+sys
+1: h:r e.:G4 s:G4
+2: q:A4 q:G4 q:C5
+3: h:B4 e.:G4 s:G4
+4: q:A4 q:G4 q:D5
+5: h:C5 e.:G4 s:G4
+6: q:G5 q:E5 q:C5
+7: q:B4 q:A4 e.:F5 s:F5
+8: q:E5 q:C5 q:D5
+9: h.:C5

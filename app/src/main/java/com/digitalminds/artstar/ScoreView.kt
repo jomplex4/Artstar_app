@@ -27,6 +27,8 @@ class ScoreView(ctx: Context) : View(ctx) {
     var den = 4
     var showNames = false
     var showFinger = true
+    var inst: InstDef = Insts.bar
+    var bass = false
     var waiting = false
     var onTap: (() -> Unit)? = null
 
@@ -52,7 +54,7 @@ class ScoreView(ctx: Context) : View(ctx) {
         cache.clear()
     }
 
-    private val ppt get() = sp * 0.19f
+    private val ppt get() = sp * 0.19f * (if (inst.fam == 1) 1.3f else 1f)
     private val headW get() = sp * 1.18f
     private val stemW get() = sp * 0.13f
 
@@ -61,6 +63,8 @@ class ScoreView(ctx: Context) : View(ctx) {
     private fun xOf(t: Float): Float = nowX() + (t - curTick) * ppt
     private fun yPos(pos: Int): Float = BOTTOM * sp - pos * sp / 2f
     private fun yLine(k: Int): Float = (TOP + k) * sp
+
+    private fun posOf(n: Note): Int = n.dia - (if (bass) 18 else 30)
 
     private fun gs(code: Int): String = glyphStrings.getOrPut(code) { String(Character.toChars(code)) }
 
@@ -100,13 +104,13 @@ class ScoreView(ctx: Context) : View(ctx) {
         c.drawRect(0f, 0f, ce, h, fillPaint)
         linePaint.color = C.MUTED
         for (k in 0 until 5) c.drawLine(0f, yLine(k), ce, yLine(k), linePaint)
-        glyph(c, 0xE050, sp * 0.6f, yLine(3), C.TEXT)
+        if (bass) glyph(c, 0xE062, sp * 0.6f, yLine(1), C.TEXT) else glyph(c, 0xE050, sp * 0.6f, yLine(3), C.TEXT)
         var kx = sp * 3.6f
         if (keySig > 0) {
-            val order = intArrayOf(8, 5, 9, 6, 3, 7, 4)
+            val order = if (bass) intArrayOf(6, 3, 7, 4, 1, 5, 2) else intArrayOf(8, 5, 9, 6, 3, 7, 4)
             for (i in 0 until min(keySig, 7)) { glyph(c, 0xE262, kx, yPos(order[i]), C.TEXT); kx += sp * 1.05f }
         } else if (keySig < 0) {
-            val order = intArrayOf(4, 7, 3, 6, 2, 5, 1)
+            val order = if (bass) intArrayOf(2, 5, 1, 4, 0, 3, 6) else intArrayOf(4, 7, 3, 6, 2, 5, 1)
             for (i in 0 until min(-keySig, 7)) { glyph(c, 0xE260, kx, yPos(order[i]), C.TEXT); kx += sp * 1.05f }
         }
         kx += sp * 0.5f
@@ -140,14 +144,14 @@ class ScoreView(ctx: Context) : View(ctx) {
         for ((_, list) in byBeat) {
             if (list.size >= 2) {
                 var far = list[0]
-                for (i in list) if (abs(notes[i].pos - 4) > abs(notes[far].pos - 4)) far = i
-                val up = notes[far].pos < 4
+                for (i in list) if (abs(posOf(notes[i]) - 4) > abs(posOf(notes[far]) - 4)) far = i
+                val up = posOf(notes[far]) < 4
                 val gi = groups.size
                 for (i in list) { nl[i].up = up; nl[i].group = gi }
                 groups.add(list.toIntArray())
             }
         }
-        for (i in notes.indices) if (nl[i].group < 0) nl[i].up = notes[i].pos < 4
+        for (i in notes.indices) if (nl[i].group < 0) nl[i].up = posOf(notes[i]) < 4
         val tup = ArrayList<IntArray>()
         var i = 0
         while (i < notes.size) {
@@ -242,17 +246,17 @@ class ScoreView(ctx: Context) : View(ctx) {
             }
             val ev = st.events[slot.evIdx[i]]
             val col = colorFor(ev.t0, ev.t1)
-            val y = yPos(n.pos)
+            val y = yPos(posOf(n))
             val nlay = lay.nl[i]
             // lineas adicionales
             linePaint.color = C.MUTED
             linePaint.strokeWidth = sp * 0.11f
-            if (n.pos <= -2) {
+            if (posOf(n) <= -2) {
                 var p = -2
-                while (p >= n.pos) { c.drawLine(cx - sp * 1.0f, yPos(p), cx + sp * 1.0f, yPos(p), linePaint); p -= 2 }
-            } else if (n.pos >= 10) {
+                while (p >= posOf(n)) { c.drawLine(cx - sp * 1.0f, yPos(p), cx + sp * 1.0f, yPos(p), linePaint); p -= 2 }
+            } else if (posOf(n) >= 10) {
                 var p = 10
-                while (p <= n.pos) { c.drawLine(cx - sp * 1.0f, yPos(p), cx + sp * 1.0f, yPos(p), linePaint); p += 2 }
+                while (p <= posOf(n)) { c.drawLine(cx - sp * 1.0f, yPos(p), cx + sp * 1.0f, yPos(p), linePaint); p += 2 }
             }
             // alteracion accidental
             if (n.show != 0) {
@@ -268,9 +272,10 @@ class ScoreView(ctx: Context) : View(ctx) {
             val hx = cx - (if (n.nominal >= 192) sp * 0.844f else headW / 2f)
             glyph(c, head, hx, y, col)
             // puntillo
-            if (isDotted(n)) {
-                val dy = if (Math.floorMod(n.pos, 2) == 0) y - sp * 0.5f else y
-                glyph(c, 0xE1E7, cx + headW / 2f + sp * 0.35f, dy, col)
+            val nd = dotCount(n.dur, n.triplet)
+            if (nd > 0) {
+                val dy = if (Math.floorMod(posOf(n), 2) == 0) y - sp * 0.5f else y
+                for (k in 0 until nd) glyph(c, 0xE1E7, cx + headW / 2f + sp * (0.35f + 0.5f * k), dy, col)
             }
             // plica y corchete (solo si no esta en un grupo con barra)
             if (n.nominal < 192 && nlay.group < 0) {
@@ -300,9 +305,19 @@ class ScoreView(ctx: Context) : View(ctx) {
                 textPaint.textAlign = Paint.Align.CENTER
                 if (showFinger) {
                     textPaint.typeface = Fonts.bold
-                    textPaint.textSize = sp * 2.3f
                     textPaint.color = col
-                    c.drawText(Fingering.forMidi(n.midi) ?: "?", cx, sp * 6.5f, textPaint)
+                    if (inst.fam == 1) {
+                        val sx = Fingering.sax(n.midi)
+                        textPaint.textSize = sp * 1.45f
+                        if (sx == null) c.drawText("?", cx, sp * 6.3f, textPaint)
+                        else {
+                            c.drawText(sx.top, cx, sp * 5.0f, textPaint)
+                            if (sx.bottom.isNotEmpty()) c.drawText(sx.bottom, cx, sp * 6.7f, textPaint)
+                        }
+                    } else {
+                        textPaint.textSize = sp * 2.3f
+                        c.drawText(Fingering.label(inst, n.midi) ?: "?", cx, sp * 6.5f, textPaint)
+                    }
                 }
                 if (showNames) {
                     textPaint.typeface = Fonts.medium
@@ -328,7 +343,7 @@ class ScoreView(ctx: Context) : View(ctx) {
             val xa = xOf(ev.t0.toFloat()) + headW * 0.4f
             val xb = xOf(ev.tieTargetT.toFloat()) - headW * 0.4f
             if (xb < ce || xa > width) continue
-            val y = yPos(n.pos)
+            val y = yPos(posOf(n))
             val below = lay.nl[i].up
             val yy = if (below) y + sp * 0.75f else y - sp * 0.75f
             val depth = if (below) sp * 0.9f else -sp * 0.9f
@@ -341,7 +356,12 @@ class ScoreView(ctx: Context) : View(ctx) {
         }
     }
 
-    private fun isDotted(n: Note): Boolean = !n.triplet && (n.dur == 36 || n.dur == 72 || n.dur == 144 || n.dur == 18 || n.dur == 9)
+    private fun dotCount(dur: Int, triplet: Boolean): Int = when {
+        triplet -> 0
+        dur == 36 || dur == 72 || dur == 144 || dur == 18 || dur == 9 -> 1
+        dur == 42 || dur == 84 || dur == 168 || dur == 21 -> 2
+        else -> 0
+    }
 
     private fun drawRepeat(c: Canvas, x: Float, start: Boolean) {
         val top = yLine(0); val bot = yLine(4)
@@ -363,8 +383,9 @@ class ScoreView(ctx: Context) : View(ctx) {
 
     private fun drawRest(c: Canvas, n: Note, cx: Float, col: Int) {
         val nom = if (n.fullRest) 192 else n.nominal
-        val dotted = !n.triplet && (nom == 36 || nom == 72 || nom == 144 || nom == 18 || nom == 9)
-        val base = if (dotted) nom * 2 / 3 else nom
+        val dots = dotCount(nom, n.triplet)
+        val dotted = dots > 0
+        val base = if (dots == 2) nom * 4 / 7 else if (dots == 1) nom * 2 / 3 else nom
         val code: Int
         val y: Float
         when {
@@ -378,7 +399,7 @@ class ScoreView(ctx: Context) : View(ctx) {
         glyphPaint.textSize = 4f * sp
         val w = glyphPaint.measureText(gs(code))
         glyph(c, code, cx - w / 2f, y, col)
-        if (dotted) glyph(c, 0xE1E7, cx + w / 2f + sp * 0.3f, yLine(2) - sp * 0.5f, col)
+        for (k in 0 until dots) glyph(c, 0xE1E7, cx + w / 2f + sp * (0.3f + 0.5f * k), yLine(2) - sp * 0.5f, col)
     }
 
     private fun drawBeams(c: Canvas, st: Stream, slot: Slot, lay: MLay, g: IntArray) {
@@ -386,7 +407,7 @@ class ScoreView(ctx: Context) : View(ctx) {
         val up = lay.nl[g[0]].up
         var edge = if (up) Float.MAX_VALUE else -Float.MAX_VALUE
         for (i in g) {
-            val y = yPos(notes[i].pos)
+            val y = yPos(posOf(notes[i]))
             edge = if (up) min(edge, y - sp * 3.3f) else max(edge, y + sp * 3.3f)
         }
         val xs = FloatArray(g.size)
@@ -401,7 +422,7 @@ class ScoreView(ctx: Context) : View(ctx) {
             val t = slot.t0 + slot.offsets[i]
             linePaint.color = colorFor(t, t + n.dur)
             linePaint.strokeWidth = stemW
-            c.drawLine(xs[k], yPos(n.pos), xs[k], edge, linePaint)
+            c.drawLine(xs[k], yPos(posOf(n)), xs[k], edge, linePaint)
         }
         // barras
         val gt0 = slot.t0 + slot.offsets[g[0]]
@@ -438,7 +459,7 @@ class ScoreView(ctx: Context) : View(ctx) {
         val up = lay.nl[g[0]].up
         var tip = if (up) Float.MAX_VALUE else -Float.MAX_VALUE
         for (i in g) {
-            val y = yPos(notes[i].pos)
+            val y = yPos(posOf(notes[i]))
             val t = if (up) y - sp * 3.5f else y + sp * 3.5f
             tip = if (up) min(tip, t) else max(tip, t)
         }

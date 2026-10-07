@@ -1,0 +1,20 @@
+id: l22_rema
+title: Rema, rema tu bote
+subtitle: Canciones
+cat: lesson
+group: Canciones
+desc: Canción tradicional en 6/8 que sube por grados y baja en arpegio. Muy buena para el pulso de dos tiempos.
+meta: 6/8
+time: 6/8
+key: 0
+bpm: 80
+part: bar1 | Barítono | key=0 | inst=bar
+sys
+1: q.:C4 q.:C4
+2: q:C4 e:D4 q.:E4
+3: q:E4 e:D4 q:E4 e:F4
+4: h.:G4
+5: e:C5 e:C5 e:C5 e:G4 e:G4 e:G4
+6: e:E4 e:E4 e:E4 e:C4 e:C4 e:C4
+7: q:G4 e:F4 q:E4 e:D4
+8: h.:C4

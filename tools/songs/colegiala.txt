@@ -1,0 +1,335 @@
+id: colegiala
+title: Colegiala
+subtitle: Marcha escolar
+meta: 2/4
+time: 2/4
+key: -1
+bpm: 100
+order: 1-10,3-9,11-19,12-17,20-29,22-27,30-39,32-37,40-41
+section: Primera parte | 3-11
+section: Segunda parte | 12-21
+section: Tercera parte | 22-31
+section: Final | 32-37,40-41
+part: bajo | Bajo (Euphonium) | key=-1 | inst=bar
+sys
+1: q:D5 e.:D5 s:D5
+2: q:D5 q:r
+3: {rs} h:D5
+4: e:B4 e:D5 e:F5 e:D5
+5: h:B4
+6: e:F4 e:A4 e:C5 e:A4
+7: h:F4
+8: e:F4 e:A4 e:C5 e:A4
+9: h:C#5
+10: {v1 re} e:D5 e:D5 e:A4 e:F4
+11: {v2} e:D5 e:D5 e:A4 e:F4
+12: {rs} h:D5
+sys
+13: e:G4 e:B4 e:D5 e:B4
+14: h:G4
+15: e:F4 e:A4 e:C5 e:A4
+16: h:F4
+17: e:A4 e:C#5 e:E5 e:C5
+18: {v1} h:A4
+19: {v1 re} e:D5 e:D5 e:A4 e:F4
+20: {v2} q:D5 e.:D5 s:D5
+21: e:D5 e:r e3:A4 e3:Bn4 e3:C#5
+22: {rs} h:D5~
+23: e:D5 e:r e3:C5 e3:B4 e3:A4
+24: h:G4~
+sys
+25: e:G4 e:r e3:G4 e3:A4 e3:B4
+26: h:A4~
+27: e:A4 e:r e3:A4 e3:F5 e3:E5
+28: {v1} h:D5~
+29: {v1 re} e:D5 e:r e3:A4 e3:Bn4 e3:C#5
+30: {v2} q:D5 e.:A4 s:A4
+31: q:D5 q:r
+32: {rs} h:D5
+sys
+33: e:G4 e:B4 e:D5 e:B4
+34: h:G4
+35: e:F4 e:A4 e:C5 e:A4
+36: h:F4
+37: e:A4 e:C#5 e:E5 e:C5
+38: {v1} h:A4
+39: {v1 re} e:D5 e:D5 e:A4 e:F4
+40: {v2} q:D5 e.:D5 s:D5
+41: e:D5 e:r q:r
+part: tpt1 | Trompeta 1 | key=-1 | inst=tpt
+sys
+1: q:D5 e.:D5 s:D5
+2: q:D5 e:r e:A4
+3: {rs} e:D5 e:D5 e:D5 e:E5
+4: e:F5 q:D5 e:D5
+5: e:F5 e:E5 e:F5 e:D5
+6: e:C5 q:A4 e:A4
+7: e:C5 e:C5 e:C5 e:A4
+8: e:D5 q:C5 e:A4
+9: e:E5 e:C#5 e:A4 e:G4
+10: {v1 re} q:F4 e:r e:A4
+11: {v2} q:F4 e:r e:D5
+12: {rs} e:D5 e:D5 e:D5 e:C5
+sys
+13: e:B4 q:G4 e:D5
+14: e:D5 e:F5 e:D5 e:C5
+15: q:A4 e:r e:A4
+16: e:A4 e:A4 e:B4 e:A4
+17: e:G4 q:E4 e:A4
+18: {v1} e:A4 e:D5 e:A4 e:G4
+19: {v1 re} q:F4 e:r e:D5
+20: {v2} e.:A4 s:A4 e.:F5 s:E5
+21: e:D5 e:r q:r
+22: {rs} e:r s:D5 s:D5 e:D5 e:D5
+23: e:D5 e:D5 e:D5 e:D5
+24: e:r s:D5 s:D5 e:D5 e:D5
+sys
+25: e:D5 e:D5 e:D5 e:D5
+26: e:r s:C#5 s:C5 e:C5 e:C5
+27: e:C#5 e:C5 e:C5 e:C5
+28: {v1} e:r s:D5 s:D5 e:D5 e:D5
+29: {v1 re} e:D5 e:r q:r
+30: {v2} q:D5 e.:D5 s:D5
+31: q:D5 e:r e:D5
+32: {rs} e:D5 e:D5 e:D5 e:C5
+sys
+33: e:B4 q:G4 e:D5
+34: e:D5 e:F5 e:D5 e:C5
+35: q:A4 e:r e:A4
+36: e:A4 e:A4 e:B4 e:A4
+37: e:G4 q:E4 e:A4
+38: {v1} e:A4 e:D5 e:A4 e:G4
+39: {v1 re} q:F4 e:r e:D5
+40: {v2} e.:A4 s:A4 e.:F5 s:E5
+41: e:D5 e:r q:r
+part: tpt2 | Trompeta 2 | key=-1 | inst=tpt
+sys
+1: q:A4 e.:A4 s:A4
+2: q:A4 e:r e:F4
+3: {rs} e:B4 e:B4 e:B4 e:C5
+4: e:D5 q:B4 e:B4
+5: e:D5 e:C5 e:D5 e:B4
+6: e:A4 q:F4 e:F4
+7: e:A4 e:A4 e:A4 e:F4
+8: e:B4 q:A4 e:F4
+9: e:A4 e:A4 e:F4 e:E4
+10: {v1 re} q:D4 e:r e:F4
+11: {v2} q:D4 e:r e:B4
+12: {rs} e:B4 e:B4 e:B4 e:A4
+sys
+13: e:G4 q:D4 e:B4
+14: e:B4 e:D5 e:B4 e:A4
+15: q:F4 e:r e:F4
+16: e:F4 e:F4 e:G4 e:F4
+17: e:E4 q:C#4 e:F4
+18: {v1} e:F4 e:A4 e:F4 e:E4
+19: {v1 re} q:D4 e:r e:B4
+20: {v2} e.:F4 s:F4 e.:A4 s:G4
+21: e:F4 e:r q:r
+22: {rs} e:r s:A4 s:A4 e:A4 e:A4
+23: e:A4 e:A4 e:A4 e:A4
+24: e:r s:B4 s:B4 e:B4 e:B4
+sys
+25: e:B4 e:B4 e:B4 e:B4
+26: e:r s:A4 s:A4 e:A4 e:A4
+27: e:A4 e:A4 e:A4 e:A4
+28: {v1} e:r s:A4 s:A4 e:A4 e:A4
+29: {v1 re} e:A4 e:r q:r
+30: {v2} q:A4 e.:A4 s:A4
+31: q:A4 e:r e:B4
+32: {rs} e:B4 e:B4 e:B4 e:A4
+33: e:G4 q:D4 e:B4
+sys
+34: e:B4 e:D5 e:B4 e:A4
+35: q:F4 e:r e:F4
+36: e:F4 e:F4 e:G4 e:F4
+37: e:E4 q:C#4 e:F4
+38: {v1} e:F4 e:A4 e:F4 e:E4
+39: {v1 re} q:D4 e:r e:B4
+40: {v2} e.:F4 s:F4 e.:A4 s:G4
+41: e:F4 e:r q:r
+part: alto1 | Saxo alto 1 | key=0 | inst=alto
+sys
+1: q:A5 e.:A5 s:A5
+2: q:A5 e:r e:E5
+3: {rs} e:A5 e:A5 e:A5 e:B5
+4: e:C6 q:A5 e:A5
+5: e:C6 e:B5 e:C6 e:A5
+6: e:G5 q:E5 e:E5
+7: e:G5 e:G5 e:G5 e:E5
+8: e:A5 q:G5 e:E5
+9: e:B5 e:G#5 e:E5 e:D5
+10: {v1 re} q:C5 e:r e:E5
+11: {v2} q:C5 e:r e:A5
+12: {rs} e:A5 e:A5 e:A5 e:G5
+13: e:F5 q:D5 e:A5
+sys
+14: e:A5 e:C6 e:A5 e:G5
+15: q:E5 e:r e:E5
+16: e:E5 e:E5 e:F5 e:E5
+17: e:D5 q:B4 e:E5
+18: {v1} e:E5 e:A5 e:E5 e:D5
+19: {v1 re} q:C5 e:r e:A5
+20: {v2} e.:E5 s:E5 e.:C6 s:B5
+21: e:A5 e:r e3:E5 e3:F#5 e3:G#5
+22: {rs} h:A5~
+23: e:A5 e:r e3:G5 e3:F5 e3:E5
+24: h:D5~
+25: e:D5 e:r e3:D5 e3:E5 e3:F5
+26: h:E5~
+sys
+27: e:E5 e:r e3:E5 e3:C6 e3:B5
+28: {v1} h:A5~
+29: {v1 re} e:A5 e:r q:r
+30: {v2} q:A5 e.:A5 s:A5
+31: q:A5 e:r e:A5
+32: {rs} e:A5 e:A5 e:A5 e:G5
+33: e:F5 q:D5 e:A5
+34: e:A5 e:C6 e:A5 e:G5
+sys
+35: q:E5 e:r e:E5
+36: e:E5 e:E5 e:F5 e:E5
+37: e:D5 q:B4 e:E5
+38: {v1} e:E5 e:A5 e:E5 e:D5
+39: {v1 re} q:C5 e:r e:A5
+40: {v2} e.:E5 s:E5 e.:C6 s:B5
+41: e:A5 e:r q:r
+part: alto2 | Saxo alto 2 | key=0 | inst=alto
+sys
+1: q:E5 e.:E5 s:E5
+2: q:E5 e:r e:C5
+3: {rs} e:F5 e:F5 e:F5 e:G5
+4: e:A5 q:F5 e:F5
+5: e:A5 e:G5 e:A5 e:F5
+6: e:E5 q:C5 e:C5
+7: e:E5 e:E5 e:E5 e:C5
+8: e:F5 q:E5 e:C5
+9: e:E5 e:E5 e:C5 e:B4
+10: {v1 re} q:A4 e:r e:C5
+11: {v2} q:A4 e:r e:F5
+12: {rs} e:F5 e:F5 e:F5 e:E5
+13: e:D5 q:A4 e:F5
+sys
+14: e:F5 e:A5 e:F5 e:E5
+15: q:C5 e:r e:C5
+16: e:C5 e:C5 e:D5 e:C5
+17: e:B4 q:G#4 e:C5
+18: {v1} e:C5 e:E5 e:C5 e:B4
+19: {v1 re} q:A4 e:r e:F5
+20: {v2} e.:C5 s:C5 e.:E5 s:D5
+21: e:C5 e:r e3:E5 e3:F#5 e3:G#5
+22: {rs} h:A5~
+23: e:A5 e:r e3:G5 e3:F5 e3:E5
+24: h:D5~
+25: e:D5 e:r e3:D5 e3:E5 e3:F5
+26: h:E5~
+sys
+27: e:E5 e:r e3:E5 e3:G5 e3:F5
+28: {v1} h:E5~
+29: {v1 re} e:E5 e:r q:r
+30: {v2} q:E5 e.:E5 s:E5
+31: q:E5 e:r e:F5
+32: {rs} e:F5 e:F5 e:F5 e:E5
+33: e:D5 q:A4 e:F5
+34: e:F5 e:A5 e:F5 e:E5
+sys
+35: q:C5 e:r e:C5
+36: e:C5 e:C5 e:D5 e:C5
+37: e:B4 q:G#4 e:C5
+38: {v1} e:C5 e:E5 e:C5 e:B4
+39: {v1 re} q:A4 e:r e:F5
+40: {v2} e.:C5 s:C5 e.:E5 s:D5
+41: e:C5 e:r q:r
+part: tbn | Trombón | key=-3 | inst=tbn
+sys
+1: q:C4 e.:C4 s:C4
+2: q:C4 q:r
+3: {rs} e:r e:C4 e:r e:C4
+4: e:r e:C4 e:r e:C4
+5: e:r e:C4 e:r e:C4
+6: e:r e:B3 e:r e:B3
+7: e:r e:B3 e:r e:B3
+8: e:r e:B3 e:r e:B3
+9: e:r e:Bn3 e:r e:B3
+10: {v1 re} e:r e:C4 e:r e:C4
+11: {v2} e:r e:C4 e:r e:C4
+12: {rs} e:r e:C4 e:r e:C4
+sys
+13: e:r e:C4 e:r e:C4
+14: e:r e:C4 e:r e:C4
+15: e:r e:B3 e:r e:B3
+16: e:r e:B3 e:r e:B3
+17: e:r e:Bn3 e:r e:B3
+18: {v1} e:r e:C4 e:r e:C4
+19: {v1 re} e:r e:C4 e:r e:C4
+20: {v2} q:C4 e.:C4 s:C4
+21: e:C4 e:r e3:G3 e3:An3 e3:Bn3
+22: {rs} h:C4~
+23: e:C4 e:r e3:B3 e3:A3 e3:G3
+24: h:F3~
+sys
+25: e:F3 e:r e3:F3 e3:G3 e3:A3
+26: h:G3~
+27: e:G3 e:r e3:G3 e3:E4 e3:D4
+28: {v1} h:C4~
+29: {v1 re} e:C4 e:r e3:G3 e3:An3 e3:Bn3
+30: {v2} q:C4 e.:G3 s:G3
+31: q:C4 q:r
+32: {rs} e:r e:C4 e:r e:C4
+33: e:r e:C4 e:r e:C4
+sys
+34: e:r e:C4 e:r e:C4
+35: e:r e:B3 e:r e:B3
+36: e:r e:B3 e:r e:B3
+37: e:r e:Bn3 e:r e:B3
+38: {v1} e:r e:C4 e:r e:C4
+39: {v1 re} e:r e:C4 e:r e:C4
+40: {v2} q:C4 e.:C4 s:C4
+41: e:C4 e:r q:r
+part: tuba_src | Tuba (fuente) | key=-1 | inst=bar | hidden=1
+sys
+1: q:D5 e.:D5 s:D5
+2: q:D5 q:r
+3: {rs} e:B4 e:r e:F4 e:r
+4: e:B4 e:r e:F4 e:r
+5: e:B4 e:r e:F4 e:r
+6: e:C5 e:r e:F4 e:r
+7: e:C5 e:r e:F4 e:r
+8: e:C5 e:r e:F4 e:r
+9: e:A4 e:r e:E4 e:r
+10: {v1 re} e:D5 e:r e:A4 e:r
+11: {v2} e:D5 e:r e:A4 e:r
+12: {rs} e:G4 e:r e:D5 e:r
+sys
+13: e:G4 e:r e:D5 e:r
+14: e:G4 e:r e:D5 e:r
+15: e:F4 e:r e:C5 e:r
+16: e:F4 e:r e:C5 e:r
+17: e:A4 e:r e:E4 e:r
+18: {v1} e:D5 e:r e:A4 e:r
+19: {v1 re} e:D5 e:r e:A4 e:r
+20: {v2} q:D5 e.:D5 s:D5
+21: e:D5 e:r e3:A4 e3:Bn4 e3:C#5
+22: {rs} h:D5~
+23: e:D5 e:r e3:C5 e3:B4 e3:A4
+24: h:G4~
+sys
+25: e:G4 e:r e3:G4 e3:A4 e3:B4
+26: h:A4~
+27: e:A4 e:r e3:A4 e3:F5 e3:E5
+28: {v1} h:D5~
+29: {v1 re} e:D5 e:r e3:A4 e3:Bn4 e3:C#5
+30: {v2} q:D5 e.:A4 s:A4
+31: q:D5 q:r
+32: {rs} e:G4 e:r e:D5 e:r
+33: e:G4 e:r e:D5 e:r
+sys
+34: e:G4 e:r e:D5 e:r
+35: e:F4 e:r e:C5 e:r
+36: e:F4 e:r e:C5 e:r
+37: e:A4 e:r e:E4 e:r
+38: {v1} e:D5 e:r e:A4 e:r
+39: {v1 re} e:D5 e:r e:A4 e:r
+40: {v2} q:D5 e.:D5 s:D5
+41: e:D5 e:r q:r
+part: tuba | Tuba | key=-3 | inst=tuba | from=tuba_src | semis=-26 | steps=-15 | keyd=-2

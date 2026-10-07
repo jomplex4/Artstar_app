@@ -1,0 +1,21 @@
+id: l18_para_elisa
+title: Para Elisa
+subtitle: Canciones
+cat: lesson
+group: Canciones
+desc: El inicio de la obra de Beethoven, en 3/8. Practica el movimiento rápido entre Mi y Re sostenido.
+meta: 3/8
+time: 3/8
+key: 0
+bpm: 60
+part: bar1 | Barítono | key=0 | inst=bar
+sys
+1: q:r s:E5 s:D#5
+2: s:E5 s:D#5 s:E5 s:B4 s:Dn5 s:C5
+3: e:A4 s:r s:C4 s:E4 s:A4
+4: e:B4 s:r s:E4 s:G#4 s:B4
+5: e:C5 s:r s:E4 s:E5 s:D#5
+6: s:E5 s:D#5 s:E5 s:B4 s:Dn5 s:C5
+7: e:A4 s:r s:C4 s:E4 s:A4
+8: e:B4 s:r s:E4 s:C5 s:B4
+9: q.:A4

@@ -1,0 +1,21 @@
+id: l23_canon
+title: Canon de Pachelbel
+subtitle: Canciones
+cat: lesson
+group: Canciones
+desc: El famoso tema descendente del Canon. Notas largas que piden mucho aire y un sonido parejo.
+meta: 4/4
+time: 4/4
+key: 0
+bpm: 72
+part: bar1 | Barítono | key=0 | inst=bar
+sys
+1: h:E5 h:D5
+2: h:C5 h:B4
+3: h:A4 h:G4
+4: h:A4 h:B4
+5: h:C5 h:B4
+6: h:A4 h:G4
+7: h:F4 h:E4
+8: h:F4 h:D4
+9: w:C4

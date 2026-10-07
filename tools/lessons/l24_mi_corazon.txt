@@ -1,0 +1,71 @@
+id: l24_mi_corazon
+title: Mi corazón encantado
+subtitle: Canciones
+cat: lesson
+group: Canciones
+desc: Tema de Dragon Ball GT (Dan Dan Kokoro Hikareteku, de Tetsuro Oda), en la adaptación para piano que enviaste. Está en altura real y la app la pasa a la nota escrita de cada instrumento para que suene igual.
+meta: 4/4
+time: 4/4
+key: 0
+bpm: 120
+concert: 1
+part: bar1 | Barítono | key=0 | inst=bar
+sys
+1: R
+2: e:r e:G4 e:F4 e:G4 e:E4 e:G4 e:D4 e:G4
+3: q:G5 q:G5 e:E5 e:F5 e:G5 e:A5
+4: q:G5 q:F5 q:E5 q:D5
+5: q:E5 q:E5 e:C5 e:D5 e:E5 e:F5
+6: q:E5 q:D5 q:C5 q:B4
+7: q:r e:A4 e:A4 q:C5 q:A5
+8: q.:G5 e:G5 q:C5 e:D5 e:E5
+9: q:F5 q:E5 q:D5 q:C5
+10: q.:D5 e:D5 q:C5 q:B4
+11: e:r e:Ab5 e:G5 q:F5 e:Eb5 e:D5 e:E5
+12: e:r e:Bb5 e:Ab5 q:G5 e:F5 e:Eb5 e:F5
+13: q:G5 e:r e:C5 e:r e:B4 e:r e:A4
+14: e:r e:G4 e:r e:F4 e:r e:E4 e:r e:D4
+15: h:r e:C5 e:C5 e:C5 e:C5
+16: q:C5 e:Bb4 q:Ab4 e:B4 q:C5
+17: h:Bb4 e:B4 e:B4 e:B4 e:B4
+18: q:Bb4 e:Ab4 q:G4 e:A4 q:B4
+19: h:Ab4 q3:A4 q3:A4 q3:A4
+20: h:Ab4 e.:G4 s:G4~ e:G4 e:F4
+21: q:F4 q:G4 e:Eb4 q:F4 e:G4~
+22: h:G4 e:r e:Ab4~ e:A4 e:Bb4
+23: h:C5 e:C5 e:C5 e:C5 e:C5
+24: q:C5 e:Bb4 q:Ab4 e:B4 q:C5
+25: q.:Bb4 e:B4 e.:B4 s:C5~ e:C5 e:D5
+26: q:D5 q:Eb5 e:Bb4~ s:B4 s:Ab4~ e:A4 e:G4
+27: h:Ab4~ e:A4 e:A4 e:Bb4 e:A4
+28: q.:G4 e:G4 e.:G4 s:G5~ e:G5 e:F5
+29: h:F5 e:F5 e:Eb5 e:D5 e:E5~
+30: h:Eb5 q:C5 q:D5
+31: e:Eb5 e:E5 e:r e:C5 e:E5 e:E5 e:r e:C5
+32: e:Eb5 e:E5 e:r e:C5 e:F5 e:E5 e:D5 e:C5
+33: e:C5 e:Bb4 e:r e:G4 e:B4 e:B4 e:r e:G4
+34: e:Bb4 e:B4 e:r e:G4 q3:B4 q3:C5 q3:D5
+35: q3:Eb5 q3:D5 q3:E5 h:C5
+36: q3:Eb5 q3:D5 q3:E5 e:C5 e:C5 q:G5
+37: q.:F5 e:F5 e:F5 e:Eb5 e:F5 e:G5~
+38: w:G5
+39: q:G5 q:G5 e:E5 e:F5 e:G5 e:A5
+40: q:G5 q:F5 q:E5 q:D5
+41: q:E5 q:E5 e:C5 e:D5 e:E5 e:F5
+42: q:E5 q:D5 q:C5 q:B4
+43: q:r e:A4 e:A4 q:C5 q:A5
+44: q.:G5 e:G5 q:C5 e:D5 e:E5
+45: q:F5 q:E5 q:D5 q:C5
+46: q.:E5 s:F5 s:E5 h:D5
+47: q:G5 q:G5 e:E5 e:F5 e:G5 e:A5
+48: q:G5 q:F5 q:E5 q:D5
+49: q:E5 q:E5 e:C5 e:D5 e:E5 e:F5
+50: q:E5 q:D5 q:C5 q:B4
+51: q:r e:A4 e:A4 q:C5 q:A5
+52: q.:G5 e:G5 q:C5 e:D5 e:E5
+53: q:F5 q:E5 q:D5 q:C5
+54: q.:D5 e:D5 q:C5 q:B4
+55: e:r e:Ab5 e:G5 q:F5 e:Eb5 e:D5 e:E5
+56: e:r e:Bb5 e:Ab5 q:G5 e:F5 e:Eb5 e:F5
+57: h:F5 e:F5 e:G5 e:F5 e:E5~
+58: w:E5
