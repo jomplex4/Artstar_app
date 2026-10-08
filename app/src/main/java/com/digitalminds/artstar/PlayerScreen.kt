@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.drawable.ColorDrawable
+import android.os.SystemClock
 import android.view.Choreographer
 import android.view.Gravity
 import android.view.View
@@ -34,16 +35,19 @@ object Band {
     val drums = arrayOf("Bombo", "Tarola", "Napoleón", "Platillo", "Pandereta")
     val types = intArrayOf(Synth.BOMBO, Synth.TAROLA, Synth.NAPOLEON, Synth.PLATILLO, Synth.PANDERETA)
     val styles = arrayOf(
-        arrayOf("1 y 2", "Tiempo fuerte", "Marcha doble"),
-        arrayOf("Ta-ra-ta-ta", "Contratiempo", "Redoble"),
+        arrayOf("1 y 2", "Uno por compás", "Marcha doble"),
+        arrayOf("Marcha redoblada", "Ta-ra-ta-ta", "Contratiempo"),
         arrayOf("Básico", "Galope", "Contratiempo"),
         arrayOf("Choque en 2", "Con el bombo", "Cada 2 compases"),
         arrayOf("Contratiempos", "Sacudido", "Golpe en 2")
     )
-    // 0 nada, 1 suave, 2 normal, 3 acento, 4 redoble, 5 acento solo cada 2 compases
+    // 0 nada, 1 suave, 2 normal, 3 acento, 4 redoble, 5 acento solo cada 2 compases,
+    // 6 floreo (redoble corto) al inicio de los compases impares y golpe normal en los demas, 7 golpe solo en el 1 del compas.
+    // Tarola "Marcha redoblada" y bombo "Uno por compás": partitura de marcha redoblada (I.E.P. Madre Peregrina);
+    // tarola "Contratiempo": batería de Túpac Amaru (semicorcheas a contratiempo).
     val patterns = arrayOf(
-        arrayOf(intArrayOf(3, 0, 0, 0, 2, 0, 0, 0), intArrayOf(3, 0, 0, 0, 0, 0, 0, 0), intArrayOf(3, 0, 0, 0, 2, 0, 2, 0)),
-        arrayOf(intArrayOf(3, 0, 1, 1, 2, 0, 1, 1), intArrayOf(0, 0, 3, 0, 0, 0, 3, 0), intArrayOf(3, 0, 0, 0, 4, 4, 3, 0)),
+        arrayOf(intArrayOf(3, 0, 0, 0, 2, 0, 0, 0), intArrayOf(7, 0, 0, 0, 0, 0, 0, 0), intArrayOf(3, 0, 0, 0, 2, 0, 2, 0)),
+        arrayOf(intArrayOf(6, 0, 0, 0, 2, 0, 0, 0), intArrayOf(3, 0, 1, 1, 2, 0, 1, 1), intArrayOf(0, 0, 2, 2, 0, 0, 2, 2)),
         arrayOf(intArrayOf(3, 0, 2, 0, 3, 0, 0, 0), intArrayOf(3, 0, 2, 2, 3, 0, 2, 2), intArrayOf(0, 0, 3, 0, 0, 0, 3, 0)),
         arrayOf(intArrayOf(0, 0, 0, 0, 3, 0, 0, 0), intArrayOf(3, 0, 0, 0, 2, 0, 0, 0), intArrayOf(5, 0, 0, 0, 0, 0, 0, 0)),
         arrayOf(intArrayOf(0, 0, 2, 0, 0, 0, 2, 0), intArrayOf(2, 1, 2, 1, 2, 1, 2, 1), intArrayOf(0, 0, 0, 0, 3, 0, 0, 0))
@@ -107,7 +111,7 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
     private var loop = false
     private lateinit var stream: Stream
 
-    private class Acc(val part: Part, val stream: Stream, val ch: Int) { var ptr = 0; var end = -1.0 }
+    private class Acc(val part: Part, val stream: Stream, val ch: Int) { var ptr = 0; var end = -1.0; var vol = 0.55f }
     private val accs = ArrayList<Acc>()
     private var lira: Acc? = null
 
@@ -123,8 +127,11 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
     private var sens = prefs.getInt("sens", 1)
     private var mode = 0
     private val isSong = song.cat == "song"
-    private var accOn = prefs.getBoolean("acc", true)
-    private var accVol = prefs.getInt("accvol", 1)
+    private var skipSec = prefs.getInt("skip", 10).coerceIn(1, 30)
+    private var dragging = false
+    private var holdUntil = 0L
+    private val bandLevels = floatArrayOf(0.95f, 0.55f, 0.28f, 0f)
+    private val bandNames = listOf("Igual que mi parte", "Medio", "Bajo", "Apagado")
     private val drumSel = IntArray(5) { prefs.getInt("drum$it", if (isSong && (it == 0 || it == 1 || it == 3)) 1 else 0) }
     private var liraSel = prefs.getInt("lira", 0)
 
@@ -155,6 +162,8 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
     private lateinit var speedBtn: MenuButton
     private lateinit var modeBtn: MenuButton
     private lateinit var guideChip: Chip
+    private lateinit var rewBtn: SkipButton
+    private lateinit var fwdBtn: SkipButton
     private lateinit var metroChip: Chip
 
     init {
@@ -187,7 +196,7 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         bar.addView(titles, lp(0, WRAP, 1f))
         statusV.maxLines = 1
         bar.addView(statusV, lp(WRAP, WRAP).also { it.marginEnd = ctx.dpi(8f) })
-        guideChip = Chip(ctx, "Guía"); guideChip.setActive(guide)
+        guideChip = Chip(ctx, "Mi parte"); guideChip.setActive(guide)
         guideChip.tap { guide = !guide; prefs.edit().putBoolean("guide", guide).apply(); guideChip.setActive(guide); if (!guide) host.synth.noteOff(0) }
         bar.addView(guideChip, chipLp())
         metroChip = Chip(ctx, "Metrónomo"); metroChip.setActive(metro)
@@ -206,6 +215,15 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         score.showNames = namesOn
         score.showFinger = fingerOn
         score.onTap = { togglePlay() }
+        score.onDragStart = { dragging = true; host.synth.mute(true) }
+        score.onDrag = { dt ->
+            if (::stream.isInitialized) {
+                tick = (max(0.0, tick) + dt).coerceIn(0.0, (stream.total - 1).toDouble())
+                score.curTick = tick.toFloat()
+                updateHud()
+            }
+        }
+        score.onDragEnd = { dragging = false; resetPointers(); holdUntil = SystemClock.uptimeMillis() + 150L; updateHud() }
         root.addView(score, lp(MATCH, 0, 1f))
 
         val prog = LinearLayout(ctx)
@@ -224,12 +242,14 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         scroll.addView(row, FrameLayout.LayoutParams(MATCH, WRAP))
         root.addView(scroll, lp(MATCH, ctx.dpi(54f)))
 
-        row.addView(IconView(ctx, IconView.PREV).also { it.tap { stepMeasure(-1) } }, lp(ctx.dpi(38f), ctx.dpi(38f)))
+        rewBtn = SkipButton(ctx, false); rewBtn.seconds = skipSec; rewBtn.tap { skip(-1) }
+        row.addView(rewBtn, lp(ctx.dpi(40f), ctx.dpi(40f)))
         playBtn.background = roundRect(C.RED, ctx.dp(22f))
         row.addView(playBtn, lp(ctx.dpi(60f), ctx.dpi(42f)).also { it.setMargins(ctx.dpi(4f), 0, ctx.dpi(4f), 0) })
         playBtn.tap { togglePlay() }
         drawPlay()
-        row.addView(IconView(ctx, IconView.NEXT).also { it.tap { stepMeasure(1) } }, lp(ctx.dpi(38f), ctx.dpi(38f)))
+        fwdBtn = SkipButton(ctx, true); fwdBtn.seconds = skipSec; fwdBtn.tap { skip(1) }
+        row.addView(fwdBtn, lp(ctx.dpi(40f), ctx.dpi(40f)))
         row.addView(sep())
         speedBtn = MenuButton(ctx, "Velocidad")
         speedBtn.tap { dropdown(speedBtn, speedItems(), speedIdx) { setSpeed(it) } }
@@ -297,7 +317,8 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         score.stream = stream
         accs.clear()
         var ch = 1
-        for (p in song.parts) if (p !== part && ch < 12) { accs.add(Acc(p, StreamBuilder.build(song, p, order), ch)); ch++ }
+        // el acompañamiento de instrumentos solo existe en las marchas; en los ejercicios suena unicamente tu parte
+        if (isSong) for (p in song.parts) if (p !== part && ch < 12) { accs.add(Acc(p, StreamBuilder.build(song, p, order), ch).also { it.vol = volOf(p) }); ch++ }
         lira = melodyPart()?.let { Acc(it, StreamBuilder.build(song, it, order), 14) }
         owner = IntArray(stream.events.size)
         var last = 0
@@ -317,8 +338,8 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         evPtr = firstAt(stream, tick)
         for (a in accs) { a.ptr = firstAt(a.stream, tick); a.end = -1.0 }
         lira?.let { it.ptr = firstAt(it.stream, tick); it.end = -1.0 }
-        beatPtr = ceil(tick / stream.beat - 1e-9).toInt()
-        gridPtr = ceil(tick / 12.0 - 1e-9).toInt()
+        beatPtr = ceil((tick + stream.lead) / stream.beat - 1e-9).toInt()
+        gridPtr = ceil((tick + stream.lead) / 12.0 - 1e-9).toInt()
         soundEnd = -1.0
         host.synth.allOff()
         val at = stream.attacks
@@ -366,23 +387,32 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         if (::stream.isInitialized) updateHud()
     }
 
-    private fun stepMeasure(d: Int) {
-        val cur = Math.floorDiv(max(0.0, tick).toInt(), stream.mlen)
-        tick = ((cur + d).coerceIn(0, stream.slots.size - 1) * stream.mlen).toDouble()
-        resetPointers(); updateHud()
+    /** Salto de N segundos (segun el tempo y la velocidad elegidos). dir = -1 atras, 1 adelante. */
+    private fun skip(dir: Int) {
+        val d = skipSec * ticksPerSecond()
+        tick = (max(0.0, tick) + dir * d).coerceIn(0.0, (stream.total - 1).toDouble())
+        afterSeek()
     }
 
     private fun seekTo(f: Float) {
         val m = (f * stream.slots.size).toInt().coerceIn(0, stream.slots.size - 1)
-        tick = (m * stream.mlen).toDouble()
-        resetPointers(); updateHud()
+        tick = max(0, m * stream.mlen - stream.lead).toDouble()
+        afterSeek()
+    }
+
+    /** Al moverse en la partitura se silencia el audio, se recolocan los punteros y se reanuda limpio un instante despues. */
+    private fun afterSeek() {
+        host.synth.mute(true)
+        holdUntil = SystemClock.uptimeMillis() + 170L
+        resetPointers()
+        updateHud()
     }
 
     private fun sensThreshold(): Float = when (sens) { 0 -> 0.03f; 1 -> 0.012f; else -> 0.005f }
 
     private fun startDetector() {
         if (detector != null) return
-        val d = PitchDetector({ prefs.getInt("a4", 440).toDouble() }, { sensThreshold() }) { f -> onPitch(f) }
+        val d = PitchDetector({ prefs.getInt("a4", 440).toDouble() }, { sensThreshold() }, 0.15f) { f -> onPitch(f) }
         if (!d.start()) { host.toast("No se pudo abrir el micrófono"); mode = 0; refreshModeChips(); return }
         detector = d
     }
@@ -407,6 +437,15 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
     }
 
     private fun step(dt: Double) {
+        val now = SystemClock.uptimeMillis()
+        if (dragging || now < holdUntil) {
+            // mientras se arrastra o se salta: sin avanzar y sin sonido
+            score.waiting = false
+            score.curTick = tick.toFloat()
+            updateHud()
+            return
+        }
+        if (holdUntil != 0L) { holdUntil = 0L; host.synth.mute(false) }
         if (playing) {
             val tps = ticksPerSecond()
             var nt = tick + dt * tps
@@ -442,7 +481,7 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
                 if (liraMode == 3) midi += 12
                 if (liraMode == 2 && Math.floorMod(e.t0, stream.beat) != 0) play = false
             }
-            if (play) synth.noteOn(a.ch, if (liraMode > 0) Insts.glock.sample else inst.sample, midi, vel)
+            if (play && (liraMode > 0 || vel > 0f)) synth.noteOn(a.ch, if (liraMode > 0) Insts.glock.sample else inst.sample, midi, vel)
             a.end = if (liraMode > 0) e.t0 + min(e.note.dur.toDouble(), 48.0) else if (e.note.staccato) e.t0 + e.note.dur * 0.5 else e.t1 - min(3.0, e.note.dur * 0.1)
             a.ptr++
         }
@@ -464,23 +503,22 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
             evPtr++
         }
         if (soundEnd >= 0 && nt + la >= soundEnd) { synth.noteOff(0); soundEnd = -1.0 }
-        if (accOn && !micMode && tick >= 0) {
-            val v = when (accVol) { 0 -> 0.3f; 1 -> 0.5f; else -> 0.75f }
-            for (a in accs) playLine(a, nt, la, a.part.inst, v, 0)
+        if (!micMode && tick >= 0) {
+            for (a in accs) playLine(a, nt, la, a.part.inst, a.vol, 0)
         }
         if (liraSel > 0 && mode != 1 && tick >= 0) lira?.let { playLine(it, nt, la, Insts.glock, 0.55f, liraSel) }
         val beat = stream.beat
-        while (beatPtr * beat <= nt + la) {
-            val bt = beatPtr * beat
-            if (metro || bt < 0) synth.click(if (Math.floorMod(bt, stream.mlen) == 0) 2 else 1)
+        while (beatPtr * beat - stream.lead <= nt + la) {
+            val bt = beatPtr * beat - stream.lead
+            if (metro || bt < 0) synth.click(if (Math.floorMod(bt + stream.lead, stream.mlen) == 0) 2 else 1)
             beatPtr++
         }
         val compound = song.den == 8
-        while (gridPtr * 12 <= nt + la) {
-            val gt = gridPtr * 12
+        while (gridPtr * 12 - stream.lead <= nt + la) {
+            val gt = gridPtr * 12 - stream.lead
             if (gt >= 0 && !compound && mode != 1) {
-                val pos = Math.floorMod(gt, stream.mlen) / 12
-                val measure = gt / stream.mlen
+                val pos = Math.floorMod(gt + stream.lead, stream.mlen) / 12
+                val measure = (gt + stream.lead) / stream.mlen
                 for (i in 0 until 5) {
                     val sel = drumSel[i]
                     if (sel == 0) continue
@@ -488,6 +526,8 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
                     when {
                         v == 0 -> {}
                         v == 5 -> if (pos == 0 && measure % 2 == 0) synth.drum(Band.types[i], 1f)
+                        v == 6 -> if (pos == 0 && measure % 2 == 0) { synth.drum(Band.types[i], 0.5f, true); synth.drum(Band.types[i], 1f) } else synth.drum(Band.types[i], 0.72f)
+                        v == 7 -> if (pos == 0) synth.drum(Band.types[i], 1f)
                         v == 4 -> synth.drum(Band.types[i], 0.6f, true)
                         else -> synth.drum(Band.types[i], if (v == 3) 1f else if (v == 2) 0.72f else 0.45f)
                     }
@@ -540,6 +580,7 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         while (evalPtr < ev.size && ev[evalPtr].t1 + after < tick) evalPtr++
     }
 
+    /** Hoja sencilla (resultados). */
     private fun sheet(): Pair<Dialog, LinearLayout> {
         val d = Dialog(ctx)
         d.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -555,10 +596,42 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         return Pair(d, box)
     }
 
-    private fun section(box: LinearLayout, t: String) {
-        val l = label(ctx, t, 13f, C.MUTED, Fonts.medium)
-        l.setPadding(0, ctx.dpi(14f), 0, ctx.dpi(6f))
-        box.addView(l)
+    /** Hoja con titulo y boton "Listo" fijos y la lista en medio con barra rapida (gris, delgada). */
+    private fun listSheet(title: String): Pair<Dialog, LinearLayout> {
+        val d = Dialog(ctx)
+        d.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val frame = LinearLayout(ctx)
+        frame.orientation = LinearLayout.VERTICAL
+        frame.background = roundRect(C.CARD, ctx.dp(22f))
+        frame.addView(label(ctx, title, 18f, C.TEXT, Fonts.bold).also { it.setPadding(ctx.dpi(22f), ctx.dpi(18f), ctx.dpi(22f), ctx.dpi(10f)) }, lp(MATCH, WRAP))
+        val fs = FastScrollView(ctx)
+        val box = LinearLayout(ctx)
+        box.orientation = LinearLayout.VERTICAL
+        box.setPadding(ctx.dpi(18f), ctx.dpi(2f), ctx.dpi(24f), ctx.dpi(10f))
+        fs.setContent(box)
+        frame.addView(fs, lp(MATCH, 0, 1f))
+        val foot = LinearLayout(ctx)
+        foot.gravity = Gravity.END
+        foot.setPadding(ctx.dpi(18f), ctx.dpi(6f), ctx.dpi(22f), ctx.dpi(14f))
+        val close = Chip(ctx, "Listo"); close.setActive(true); close.tap { d.dismiss() }
+        foot.addView(close, lp(WRAP, WRAP))
+        frame.addView(foot, lp(MATCH, WRAP))
+        d.setContentView(frame)
+        d.window?.setBackgroundDrawable(ColorDrawable(0))
+        d.window?.setLayout((resources.displayMetrics.widthPixels * 0.72f).toInt(), (resources.displayMetrics.heightPixels * 0.92f).toInt())
+        return Pair(d, box)
+    }
+
+    /** Un ajuste: tarjeta con titulo, descripcion breve y el control debajo. */
+    private fun setting(box: LinearLayout, title: String, desc: String): LinearLayout {
+        val card = LinearLayout(ctx)
+        card.orientation = LinearLayout.VERTICAL
+        card.background = roundRect(C.BG, ctx.dp(16f), C.CARD2, ctx.dpi(1f))
+        card.setPadding(ctx.dpi(16f), ctx.dpi(14f), ctx.dpi(16f), ctx.dpi(14f))
+        card.addView(label(ctx, title, 15f, C.TEXT, Fonts.bold))
+        card.addView(label(ctx, desc, 12.5f, C.MUTED).also { it.setLineSpacing(0f, 1.15f); it.setPadding(0, ctx.dpi(4f), 0, ctx.dpi(12f)) })
+        box.addView(card, lp(MATCH, WRAP).also { it.bottomMargin = ctx.dpi(12f) })
+        return card
     }
 
     private fun chipRow(box: LinearLayout, names: List<String>, selected: Int, onPick: (Int) -> Unit) {
@@ -569,7 +642,7 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         for ((i, n) in names.withIndex()) {
             val c = Chip(ctx, n); c.setActive(i == selected)
             c.tap { for ((k, x) in chips.withIndex()) x.setActive(k == i); onPick(i) }
-            chips.add(c); r.addView(c, chipLp())
+            chips.add(c); r.addView(c, chipLp().also { it.setMargins(0, ctx.dpi(2f), ctx.dpi(6f), ctx.dpi(2f)) })
         }
         sc.addView(r)
         box.addView(sc)
@@ -593,36 +666,45 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         d.show()
     }
 
+    private fun volIdx(p: Part): Int = prefs.getInt("bv_" + p.id, 1).coerceIn(0, 3)
+    private fun volOf(p: Part): Float = bandLevels[volIdx(p)]
+
     private fun showBand() {
-        val (d, box) = sheet()
-        box.addView(label(ctx, "Banda", 18f, C.TEXT, Fonts.bold))
-        box.addView(label(ctx, "Acompañamiento para practicar como en el desfile. En el modo Espera la banda descansa.", 12f, C.DIM).also { it.setPadding(0, ctx.dpi(4f), 0, 0) })
-        if (isSong) {
-            section(box, "Instrumentos de viento")
-            val others = song.parts.filter { it !== part }.joinToString(", ") { it.name }
-            chipRow(box, listOf("Apagado", "Encendido"), if (accOn) 1 else 0) { accOn = it == 1; prefs.edit().putBoolean("acc", accOn).apply(); if (!accOn) host.synth.allOff() }
-            box.addView(label(ctx, "Suenan: $others", 12f, C.DIM).also { it.setPadding(0, ctx.dpi(6f), 0, 0) })
-            section(box, "Volumen de la banda")
-            chipRow(box, listOf("Bajo", "Medio", "Alto"), accVol) { accVol = it; prefs.edit().putInt("accvol", it).apply() }
+        val (d, box) = listSheet("Banda")
+        val others = accs.map { it.part }
+        if (isSong && others.isNotEmpty()) {
+            val card = setting(box, "Instrumentos de viento", "Elige cuánto suena cada instrumento mientras practicas tu parte. \"Igual que mi parte\" lo pone al mismo volumen que tu instrumento. Los marcados como adaptados no tienen partitura propia en esta marcha. En el modo Espera la banda descansa.")
+            card.addView(label(ctx, "Todos a la vez", 12.5f, C.MUTED, Fonts.medium).also { it.setPadding(0, 0, 0, ctx.dpi(4f)) })
+            val allRows = ArrayList<List<Chip>>()
+            chipRow(card, bandNames, -1) { k ->
+                for (p in others) prefs.edit().putInt("bv_" + p.id, k).apply()
+                for (a in accs) a.vol = bandLevels[k]
+                host.synth.allOff()
+                d.dismiss(); showBand()
+            }
+            for (a in accs) {
+                val p = a.part
+                card.addView(label(ctx, p.name, 14f, C.TEXT, Fonts.medium).also { it.setPadding(0, ctx.dpi(12f), 0, ctx.dpi(4f)) })
+                chipRow(card, bandNames, volIdx(p)) { k -> prefs.edit().putInt("bv_" + p.id, k).apply(); a.vol = bandLevels[k]; if (k == 3) host.synth.noteOff(a.ch) }
+            }
+        } else if (!isSong) {
+            box.addView(label(ctx, "En los ejercicios y canciones de Aprender suena solo tu parte, así que aquí solo hay percusión y lira.", 12.5f, C.MUTED).also { it.setLineSpacing(0f, 1.15f); it.setPadding(ctx.dpi(2f), 0, 0, ctx.dpi(12f)) })
         }
-        if (song.den == 8) box.addView(label(ctx, "La percusión de marcha se usa en compases de 2/4, 3/4 y 4/4.", 12f, C.DIM).also { it.setPadding(0, ctx.dpi(10f), 0, 0) })
+        val perc = setting(box, "Percusión de marcha", if (song.den == 8) "La percusión de marcha se usa en compases de 2/4, 3/4 y 4/4." else "Cada instrumento tiene tres formas de tocar, tomadas de los ritmos de marcha más usados en bandas escolares y militares.")
         for (i in 0 until 5) {
-            section(box, Band.drums[i])
-            chipRow(box, listOf("No") + Band.styles[i].toList(), drumSel[i]) { drumSel[i] = it; prefs.edit().putInt("drum$i", it).apply() }
+            perc.addView(label(ctx, Band.drums[i], 14f, C.TEXT, Fonts.medium).also { it.setPadding(0, if (i == 0) 0 else ctx.dpi(12f), 0, ctx.dpi(4f)) })
+            chipRow(perc, listOf("No") + Band.styles[i].toList(), drumSel[i]) { drumSel[i] = it; prefs.edit().putInt("drum$i", it).apply() }
         }
-        section(box, "Lira")
-        chipRow(box, listOf("No") + Band.liraStyles.toList(), liraSel) { liraSel = it; prefs.edit().putInt("lira", it).apply(); host.synth.noteOff(14) }
-        val close = Chip(ctx, "Listo"); close.setActive(true); close.tap { d.dismiss() }
-        box.addView(close, lp(WRAP, WRAP).also { it.topMargin = ctx.dpi(18f); it.gravity = Gravity.END })
+        val lira = setting(box, "Lira", "Toca la melodía en octava aguda como una lira de desfile.")
+        chipRow(lira, listOf("No") + Band.liraStyles.toList(), liraSel) { liraSel = it; prefs.edit().putInt("lira", it).apply(); host.synth.noteOff(14) }
         d.show()
     }
 
     private fun showSettings() {
-        val (d, box) = sheet()
-        box.addView(label(ctx, "Ajustes", 18f, C.TEXT, Fonts.bold))
+        val (d, box) = listSheet("Ajustes")
         if (song.parts.size > 1) {
-            section(box, "Parte")
-            chipRow(box, song.parts.map { it.name }, song.parts.indexOf(part)) {
+            val c = setting(box, "Parte que practico", "Elige la voz o el instrumento que vas a leer. Las demás partes pasan a ser la banda.")
+            chipRow(c, song.parts.map { it.name }, song.parts.indexOf(part)) {
                 part = song.parts[it]
                 score.bass = part.inst.bass; score.inst = part.inst; score.keySig = part.key
                 (finger.layoutParams as LinearLayout.LayoutParams).width = fingerWidth()
@@ -630,34 +712,46 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
                 rebuild(true)
             }
         }
-        section(box, "Tempo base")
+        val g = setting(box, "Mi parte (guía)", "Hace sonar la parte que estás practicando, como referencia de notas y ritmo. En los modos con micrófono se apaga sola para no mezclarse con tu instrumento. El botón \"Mi parte\" de arriba hace lo mismo.")
+        chipRow(g, listOf("Que suene", "Sin sonido"), if (guide) 0 else 1) { guide = it == 0; prefs.edit().putBoolean("guide", guide).apply(); guideChip.setActive(guide); if (!guide) host.synth.noteOff(0) }
+
+        val sk = setting(box, "Salto de los botones", "Cuántos segundos avanzan o retroceden los botones de salto, de 1 a 30. También puedes arrastrar la partitura con el dedo: a la derecha retrocede y a la izquierda adelanta.")
+        val sr = LinearLayout(ctx); sr.gravity = Gravity.CENTER_VERTICAL
+        val skL = label(ctx, "$skipSec segundos", 15f, C.TEXT, Fonts.medium)
+        fun setSkip(v: Int) { skipSec = v.coerceIn(1, 30); prefs.edit().putInt("skip", skipSec).apply(); skL.text = "$skipSec segundos"; rewBtn.seconds = skipSec; fwdBtn.seconds = skipSec }
+        sr.addView(Chip(ctx, "−").also { it.tap { setSkip(skipSec - 1) } })
+        sr.addView(skL, lp(0, WRAP, 1f).also { it.setMargins(ctx.dpi(14f), 0, ctx.dpi(14f), 0) })
+        sr.addView(Chip(ctx, "+").also { it.tap { setSkip(skipSec + 1) } })
+        sk.addView(sr)
+
+        val tp = setting(box, "Tempo base", "Las negras por minuto de la partitura al 100 % de velocidad. El menú Velocidad del reproductor lo multiplica.")
         val tr = LinearLayout(ctx); tr.gravity = Gravity.CENTER_VERTICAL
         val bpmL = label(ctx, "$baseBpm negras por minuto", 15f, C.TEXT, Fonts.medium)
         fun bump(dv: Int) { baseBpm = (baseBpm + dv).coerceIn(30, 220); prefs.edit().putInt("bpm_" + song.id, baseBpm).apply(); bpmL.text = "$baseBpm negras por minuto"; refreshSpeedChips() }
         tr.addView(Chip(ctx, "−").also { it.tap { bump(-2) } })
         tr.addView(bpmL, lp(0, WRAP, 1f).also { it.setMargins(ctx.dpi(14f), 0, ctx.dpi(14f), 0) })
         tr.addView(Chip(ctx, "+").also { it.tap { bump(2) } })
-        box.addView(tr)
+        tp.addView(tr)
         val reset = Chip(ctx, "Tempo oficial: ${song.bpm}")
         reset.tap { baseBpm = song.bpm; prefs.edit().putInt("bpm_" + song.id, baseBpm).apply(); bpmL.text = "$baseBpm negras por minuto"; refreshSpeedChips() }
-        box.addView(reset, lp(WRAP, WRAP).also { it.topMargin = ctx.dpi(6f) })
+        tp.addView(reset, lp(WRAP, WRAP).also { it.topMargin = ctx.dpi(8f) })
+
         if (song.sections.isNotEmpty()) {
-            section(box, "Sección para practicar")
-            chipRow(box, listOf("Todo") + song.sections.map { it.name }, sectionIdx + 1) { sectionIdx = it - 1; rebuild(true) }
-            chipRow(box, listOf("Una vez", "En bucle"), if (loop) 1 else 0) { loop = it == 1 }
+            val sc = setting(box, "Sección para practicar", "Practica solo un tramo y elige si suena una vez o en bucle.")
+            chipRow(sc, listOf("Todo") + song.sections.map { it.name }, sectionIdx + 1) { sectionIdx = it - 1; rebuild(true) }
+            sc.addView(View(ctx), lp(MATCH, ctx.dpi(8f)))
+            chipRow(sc, listOf("Una vez", "En bucle"), if (loop) 1 else 0) { loop = it == 1 }
         }
         if (isSong) {
-            section(box, "Orden de ejecución")
-            chipRow(box, listOf("Con repeticiones y saltos", "Como está en la hoja"), orderMode) { orderMode = it; rebuild(true) }
+            val o = setting(box, "Orden de ejecución", "Con repeticiones y saltos suena como en el desfile. Como está en la hoja toca cada compás una sola vez, de principio a fin.")
+            chipRow(o, listOf("Con repeticiones y saltos", "Como está en la hoja"), orderMode) { orderMode = it; rebuild(true) }
         }
-        section(box, "Ayudas en la partitura")
-        chipRow(box, listOf("Digitación: sí", "Digitación: no"), if (fingerOn) 0 else 1) { fingerOn = it == 0; prefs.edit().putBoolean("finger", fingerOn).apply(); score.showFinger = fingerOn; score.invalidate() }
-        chipRow(box, listOf("Nombres: no", "Nombres: sí"), if (namesOn) 1 else 0) { namesOn = it == 1; prefs.edit().putBoolean("names", namesOn).apply(); score.showNames = namesOn; score.invalidate() }
-        section(box, "Sensibilidad del micrófono")
-        chipRow(box, listOf("Baja", "Media", "Alta"), sens) { sens = it; prefs.edit().putInt("sens", it).apply() }
-        box.addView(label(ctx, "Súbela si no te detecta y bájala si hay mucho ruido. Para los modos con micrófono usa audífonos si quieres oír la guía.", 12f, C.DIM).also { it.setPadding(0, ctx.dpi(6f), 0, 0) })
-        val close = Chip(ctx, "Listo"); close.setActive(true); close.tap { d.dismiss() }
-        box.addView(close, lp(WRAP, WRAP).also { it.topMargin = ctx.dpi(18f); it.gravity = Gravity.END })
+        val fg = setting(box, "Digitación en la partitura", "Escribe sobre cada nota los pistones, la posición de la vara o las llaves.")
+        chipRow(fg, listOf("Mostrar", "Ocultar"), if (fingerOn) 0 else 1) { fingerOn = it == 0; prefs.edit().putBoolean("finger", fingerOn).apply(); score.showFinger = fingerOn; score.invalidate() }
+        val nm = setting(box, "Nombres de nota", "Escribe Do, Re, Mi... debajo de cada nota.")
+        chipRow(nm, listOf("Ocultar", "Mostrar"), if (namesOn) 1 else 0) { namesOn = it == 1; prefs.edit().putBoolean("names", namesOn).apply(); score.showNames = namesOn; score.invalidate() }
+        val ms = setting(box, "Sensibilidad del micrófono", "Súbela si no te detecta y bájala si hay mucho ruido. Para los modos con micrófono usa audífonos si quieres oír la guía.")
+        chipRow(ms, listOf("Baja", "Media", "Alta"), sens) { sens = it; prefs.edit().putInt("sens", it).apply() }
         d.show()
     }
 
@@ -668,7 +762,7 @@ class PlayerScreen(private val host: Host, private val song: Song, startPart: St
         if (!::stream.isInitialized || stream.slots.isEmpty()) return
         val eff = Math.round(baseBpm * speeds[speedIdx]).toInt()
         setIf(subV, part.name + " · " + eff + " bpm")
-        val slotIdx = if (tick < 0) 0 else min(stream.slots.size - 1, (tick / stream.mlen).toInt())
+        val slotIdx = if (tick < 0) 0 else min(stream.slots.size - 1, ((tick + stream.lead) / stream.mlen).toInt())
         setIf(measureV, if (tick < 0) "Preparado" else "Compás ${stream.slots[slotIdx].m.n}")
         seek.value = if (stream.total == 0) 0f else (max(0.0, tick) / stream.total).toFloat()
         val ev = stream.events

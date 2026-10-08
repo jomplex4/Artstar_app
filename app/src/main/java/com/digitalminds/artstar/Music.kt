@@ -52,7 +52,7 @@ class Section(val name: String, val order: List<Int>)
 class Song(
     val id: String, val title: String, val subtitle: String, val meta: String, val cat: String,
     val group: String, val desc: String, val num: Int, val den: Int, val key: Int, val bpm: Int,
-    val sections: List<Section>, val parts: List<Part>
+    val sections: List<Section>, val parts: List<Part>, val lead: Int = 0
 ) {
     val measureTicks get() = num * (192 / den)
     val beatTicks get() = if (den == 8) 72 else 192 / den
@@ -117,7 +117,7 @@ object Library {
         }
         return Song(o.getString("id"), o.getString("title"), o.optString("subtitle"), o.optString("meta"),
             o.optString("cat", "song"), o.optString("group"), o.optString("desc"),
-            o.getInt("num"), o.getInt("den"), o.getInt("key"), o.getInt("bpm"), secs, parts)
+            o.getInt("num"), o.getInt("den"), o.getInt("key"), o.getInt("bpm"), secs, parts, o.optInt("lead", 0))
     }
 
     private fun ints(a: JSONArray): List<Int> {
@@ -160,21 +160,23 @@ class Slot(val m: Measure, val index: Int, val t0: Int, val offsets: IntArray, v
     var voltaLen = 0
 }
 
-class Stream(val slots: List<Slot>, val events: List<Ev>, val total: Int, val mlen: Int, val beat: Int) {
+/** lead = ticks de silencio inicial que se omiten (anacrusa): el tiempo 0 es la primera nota. */
+class Stream(val slots: List<Slot>, val events: List<Ev>, val total: Int, val mlen: Int, val beat: Int, val lead: Int = 0) {
     val attacks: List<Int> = events.indices.filter { !events[it].cont }
 }
 
 object StreamBuilder {
     fun build(song: Song, part: Part, order: List<Int>): Stream {
         val mlen = song.measureTicks
+        val lead = if (order.isNotEmpty() && order.first() == part.measures.firstOrNull()?.n) song.lead else 0
         val slots = ArrayList<Slot>()
         val events = ArrayList<Ev>()
         for (num in order) {
             val m = part.byNumber[num] ?: continue
-            val t0 = slots.size * mlen
+            val t0 = slots.size * mlen - lead
             val offs = IntArray(m.notes.size)
             val evIdx = IntArray(m.notes.size) { -1 }
-            var acc = 0
+            var acc = if (slots.isEmpty()) lead else 0
             for ((k, nt) in m.notes.withIndex()) {
                 offs[k] = acc
                 if (!nt.isRest) {
@@ -206,6 +208,6 @@ object StreamBuilder {
             val a = events[k]; val b = events[k + 1]
             if (a.note.tie && b.t0 == a.t1 && b.note.midi == a.note.midi) { b.cont = true; a.tieTargetT = b.t0 }
         }
-        return Stream(slots, events, slots.size * mlen, mlen, song.beatTicks)
+        return Stream(slots, events, slots.size * mlen - lead, mlen, song.beatTicks, lead)
     }
 }

@@ -157,16 +157,90 @@ def shift_range(p, semis, steps, key, pid, name, inst, lo, hi):
     elif mids and min(mids) < lo: q = transpose_part(p, semis + 12, steps + 7, key, pid, name, inst)
     return q
 
+
+STD = [192, 144, 96, 72, 48, 36, 24, 18, 12, 9, 6]
+RANGES = dict(bar=(54, 86), tpt=(54, 86), alto=(58, 89), tbn=(40, 70), tuba=(34, 65))
+
+def split_std(d):
+    """Parte una duracion en figuras normales (se unen con ligadura)."""
+    out = []
+    while d > 0:
+        for v in STD:
+            if v <= d:
+                out.append(v); d -= v; break
+        else:
+            raise ValueError(f'duracion no representable: {d}')
+    return out
+
+def make_continuous(song):
+    """Melodia continua para Aprender: quita compases iniciales vacios, convierte el silencio inicial en anacrusa (lead)
+    y absorbe los demas silencios alargando la nota anterior (con ligadura si cruza la barra)."""
+    base = song['parts'][0]
+    ms = base['measures']
+    while ms and all(n[5] & 1 for n in ms[0]['notes']): ms.pop(0)
+    for i, m in enumerate(ms): m['n'] = i + 1
+    base['systems'] = [[m['n'] for m in ms]]
+    mlen = song['num'] * (192 // song['den'])
+    first = ms[0]['notes']
+    lead = 0
+    while first and first[0][5] & 1:
+        if first[0][5] & 16: raise ValueError('silencio de tresillo inicial')
+        lead += first[0][4]; first.pop(0)
+    song['lead'] = lead
+    prev = None                      # ultima nota logica (dict)
+    allm = []
+    for mi, m in enumerate(ms):
+        logical = []
+        for n in m['notes']:
+            if n[5] & 1:
+                if n[5] & 16: raise ValueError('silencio de tresillo')
+                if prev is None: raise ValueError('silencio sin nota previa')
+                if prev['n'][5] & 16: raise ValueError('silencio junto a un tresillo')
+                if logical and logical[-1] is prev:
+                    prev['dur'] += n[4]; prev['ext'] = True
+                else:                # el silencio abre el compas: continua la nota del compas anterior
+                    prev['tie_out'] = True
+                    cont = dict(n=[prev['n'][0], prev['n'][1], 0, prev['n'][3], 0, 0], dur=n[4], ext=False, cont=True, tie_out=False)
+                    logical.append(cont); prev = cont
+            else:
+                cur = dict(n=list(n), dur=n[4], ext=False, cont=False, tie_out=False)
+                logical.append(cur); prev = cur
+        allm.append(logical)
+    for m, logical in zip(ms, allm):
+        notes = []
+        for e in logical:
+            fl_orig = e['n'][5]
+            pieces = [e['dur']] if fl_orig & 16 else split_std(e['dur'])
+            for k, d in enumerate(pieces):
+                fl = fl_orig & ~(8 | 4 | 2) if k > 0 else fl_orig & ~8
+                if e['ext']: fl &= ~4                          # un staccato alargado deja de serlo
+                if k == 0 and (fl_orig & 2): fl |= 2
+                if k < len(pieces) - 1 or e['tie_out'] or (fl_orig & 8 and not e['cont']): fl |= 8
+                shown = e['n'][2] if k == 0 else 0
+                notes.append([e['n'][0], e['n'][1], shown, e['n'][3], d, fl])
+        m['notes'] = notes
+    for i, m in enumerate(ms):
+        tot = sum(x[4] for x in m['notes'])
+        want = mlen - (lead if i == 0 else 0)
+        if tot != want: raise ValueError(f"{song['id']}: compas {m['n']} suma {tot} != {want}")
+
+def check_ranges(song):
+    for p in song['parts']:
+        lo, hi = RANGES[p['inst']]
+        mids = [n[3] for m in p['measures'] for n in m['notes'] if not n[5] & 1]
+        if mids and (min(mids) < lo or max(mids) > hi):
+            print(f"  AVISO rango {song['id']} {p['id']}: {min(mids)}..{max(mids)} fuera de {lo}..{hi}")
+
 def lesson_parts(song):
     """Una leccion se escribe para instrumento en Si bemol (nota escrita). Se generan las versiones de los 5 instrumentos."""
     base = song['parts'][0]
     if song.get('concert') == '1':          # la melodia esta en altura real (piano): se pasa a nota escrita en Si bemol
         base = transpose_part(base, 2, 1, base['key'] + 2, 'bar1', 'Bajo / Barítono', 'bar')
-    bar = dict(base, id='bar1', name='Bajo / Barítono', inst='bar')
-    tpt = dict(base, id='tpt1', name='Trompeta', inst='tpt')
+    bar = shift_range(base, 0, 0, base['key'], 'bar1', 'Bajo / Barítono', 'bar', 54, 86)
+    tpt = shift_range(base, 0, 0, base['key'], 'tpt1', 'Trompeta', 'tpt', 54, 86)
     mx = max((n[3] for m in base['measures'] for n in m['notes'] if not n[5] & 1), default=60)
     semis, steps = (7, 4) if mx + 7 <= 86 else (-5, -3)
-    alto = transpose_part(base, semis, steps, base['key'] + 1, 'alto1', 'Saxo alto', 'alto')
+    alto = shift_range(base, semis, steps, base['key'] + 1, 'alto1', 'Saxo alto', 'alto', 58, 89)
     tbn = shift_range(base, -2, -1, base['key'] - 2, 'tbn1', 'Trombón', 'tbn', 40, 70)
     tuba = shift_range(base, -26, -15, base['key'] - 2, 'tuba1', 'Tuba', 'tuba', 34, 65)
     song['parts'] = [bar, tpt, alto, tbn, tuba]
@@ -189,7 +263,7 @@ def check_song(song, path):
 def to_json(song):
     out = dict(id=song['id'], title=song['title'], subtitle=song.get('subtitle', ''), meta=song.get('meta', ''),
                cat=song.get('cat', 'song'), group=song.get('group', ''), desc=song.get('desc', ''),
-               num=song['num'], den=song['den'], key=song['key'], bpm=song['bpm'],
+               num=song['num'], den=song['den'], key=song['key'], bpm=song['bpm'], lead=song.get('lead', 0),
                sections=song['sections'], parts=[])
     for p in song['parts']:
         order = song.get('order') or [m['n'] for m in p['measures']]
@@ -205,7 +279,9 @@ if __name__ == '__main__':
     for src in sys.argv[1:-1]: paths += sorted(glob.glob(os.path.join(src, '*.txt')))
     for path in paths:
         song = parse_file(path); check_song(song, path)
-        if song.get('cat') == 'lesson': lesson_parts(song)
+        if song.get('cat') == 'lesson':
+            if song.get('group') == 'Canciones': make_continuous(song)
+            lesson_parts(song); check_ranges(song)
         js = to_json(song)
         json.dump(js, open(os.path.join(dst, song['id'] + '.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
         nm = sum(len(p['measures']) for p in song['parts']) // len(song['parts'])

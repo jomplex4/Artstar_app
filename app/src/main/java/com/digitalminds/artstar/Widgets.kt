@@ -131,7 +131,7 @@ class FastScrollView(ctx: Context) : android.widget.FrameLayout(ctx) {
         sv.isVerticalScrollBarEnabled = false
         sv.overScrollMode = OVER_SCROLL_NEVER
         addView(sv, LayoutParams(MATCH, MATCH))
-        addView(bar, LayoutParams(ctx.dpi(26f), MATCH, android.view.Gravity.END))
+        addView(bar, LayoutParams(ctx.dpi(16f), MATCH, android.view.Gravity.END))
         sv.setOnScrollChangeListener { _, _, _, _, _ -> bar.invalidate() }
     }
 
@@ -150,7 +150,7 @@ class FastScrollView(ctx: Context) : android.widget.FrameLayout(ctx) {
         private fun thumbH(): Float {
             val ch = contentH().toFloat()
             if (ch <= 0f) return 0f
-            return max(context.dp(52f), height * sv.height / ch).coerceAtMost(height.toFloat())
+            return max(context.dp(40f), height * sv.height / ch).coerceAtMost(height.toFloat())
         }
 
         override fun onDraw(c: Canvas) {
@@ -159,13 +159,13 @@ class FastScrollView(ctx: Context) : android.widget.FrameLayout(ctx) {
             val th = thumbH()
             val frac = sv.scrollY.toFloat() / maxScroll()
             val top = frac * (height - th)
-            val cx = w - context.dp(8f)
+            val cx = w - context.dp(6f)
             p.color = C.CARD2
-            r.set(cx - context.dp(2f), 0f, cx + context.dp(2f), height.toFloat())
-            c.drawRoundRect(r, context.dp(2f), context.dp(2f), p)
-            p.color = if (dragging) C.RED_HI else C.RED
-            r.set(cx - context.dp(4f), top, cx + context.dp(4f), top + th)
-            c.drawRoundRect(r, context.dp(4f), context.dp(4f), p)
+            r.set(cx - context.dp(1f), 0f, cx + context.dp(1f), height.toFloat())
+            c.drawRoundRect(r, context.dp(1f), context.dp(1f), p)
+            p.color = if (dragging) C.ICON_BG else C.MUTED
+            r.set(cx - context.dp(2.5f), top, cx + context.dp(2.5f), top + th)
+            c.drawRoundRect(r, context.dp(2.5f), context.dp(2.5f), p)
         }
 
         override fun onTouchEvent(e: MotionEvent): Boolean {
@@ -183,5 +183,44 @@ class FastScrollView(ctx: Context) : android.widget.FrameLayout(ctx) {
             }
             return true
         }
+    }
+}
+
+
+/** Boton circular de salto (atras o adelante) con los segundos dentro. */
+class SkipButton(ctx: Context, private val forward: Boolean) : View(ctx) {
+    var seconds = 10
+        set(v) { field = v; invalidate() }
+    private val p = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val r = RectF()
+    private val path = android.graphics.Path()
+
+    override fun onDraw(c: Canvas) {
+        val w = width.toFloat(); val h = height.toFloat()
+        val s = min(w, h)
+        val cx = w / 2; val cy = h / 2
+        val rad = s * 0.34f
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = s * 0.075f
+        p.strokeCap = Paint.Cap.ROUND
+        p.color = C.TEXT
+        r.set(cx - rad, cy - rad, cx + rad, cy + rad)
+        // arco abierto arriba, con punta de flecha en el extremo
+        if (forward) c.drawArc(r, -60f, 300f, false, p) else c.drawArc(r, 300f, -300f, false, p)
+        val ang = Math.toRadians(if (forward) -60.0 else -120.0)
+        val ex = (cx + Math.cos(ang) * rad).toFloat(); val ey = (cy + Math.sin(ang) * rad).toFloat()
+        val dir = if (forward) 1f else -1f
+        p.style = Paint.Style.FILL
+        path.reset()
+        path.moveTo(ex + dir * s * 0.02f, ey - s * 0.17f)
+        path.lineTo(ex + dir * s * 0.17f, ey + s * 0.02f)
+        path.lineTo(ex - dir * s * 0.08f, ey + s * 0.07f)
+        path.close()
+        c.drawPath(path, p)
+        p.typeface = Fonts.bold
+        p.textAlign = Paint.Align.CENTER
+        val t = seconds.toString()
+        p.textSize = s * (if (t.length > 1) 0.27f else 0.32f)
+        c.drawText(t, cx, cy + p.textSize * 0.36f, p)
     }
 }

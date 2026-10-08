@@ -334,5 +334,369 @@ sys
 69: {v2} e:r e:B4 e:B4 e:E5
 70: q:B4> e.:B4> s:B4>
 71: e:B4> e:r q:r
-part: tbn | Trombón (adaptado) | key=-1 | inst=tbn | from=bar2 | semis=-14 | steps=-8 | keyd=-2
-part: tuba | Tuba (adaptada) | key=-1 | inst=tuba | from=bar2 | semis=-26 | steps=-15 | keyd=-2
+part: alto1 | Saxo alto 1 | key=2 | inst=alto
+sys
+1: {rs} e3:F5 e3:F5 e3:E5 e.:F5 s:E5
+2: e.:F5 s:E5 q:D5
+3: e3:B5 e3:B5 e3:A5 e.:B5 s:A5
+4: e.:B5 s:A5 q:G5
+5: e3:C6 e3:C6 e3:B5 e.:C6 s:B5
+6: {v1} e.:C6 s:B5 e.:A5 s:B5
+7: {v1} h:F5~
+8: {v1 re} e:F5 e:r q:r
+9: {v2} e.:C6 s:B5 e.:A5 s:C6
+10: h:B5>~
+11: e:B5 e:B4 e:B4 e:B4
+12: {rs} e:D5 e:D5 e:B4 e:D5
+13: e:r e:D5 e:D5 e:D5
+14: e:A4 e:A4 e:F4 e:A4
+15: e:r e:A4 e:A4 e:A4
+16: e:C5 e:C5 e:A4 e:C5
+17: e:r e:C5 e:C5 e:C5
+18: {v1} e:D5 e:C5 e:A4 e:B4
+19: {v1 re} e:r e:B4 e:B4 e:B4
+20: {v2} e:D5> e:C5> e:B4> e:A4>
+21: e:B4> e:r q:r
+22: e:r e:F5 e:F5 e:E5
+23: h:F5
+24: e:r e:F5 e:E5 e:D5
+25: e:E5 e:E5 e:E5 e:E5
+26: e:r e:E5 e:D5 e:C5
+27: h:B4~
+28: e:B4 e:F5 e:F5 e:A5
+29: h:F5
+30: e:r e:F5 e:E5 e:D5
+31: e:E5 e:E5 e:E5 e:E5
+32: e:r e:E5 e:D5 e:C5
+33: h:B4~
+34: e:B4 e:F5 e:E5 e:D5
+35: e:E5 e:r q:D5>
+36: e:r e:F5 e:E5 e:D5
+37: e:E5 e:r q:D5>
+38: e:r e:F5 e:E5 e:D5
+39: e:E5 e:r q:A5>~
+40: h:A5
+41: R
+42: R
+43: {rs} e:r e:G5 e:r e:G5
+44: e:r e:G5 e:r e:G5
+45: e:r e:F5 e:r e:F5
+46: e:r e:F5 e:r e:F5
+47: e:r e:E5 e:r e:E5
+48: e:r e:E5 e:r e:E5
+49: {v1} e:r e:F5 e:r e:F5
+50: {v1 re} e:r e:F5 e:r e:F5
+51: {v2} e:r e:F5 e:r e:F5
+52: e:r e:F5 e:F5 e:A5
+53: e:E5 e:r q:D5>
+54: e:r e:F5 e:E5 e:D5
+55: e:E5 e:r q:A5>~
+56: h:A5~
+57: e:A5 e:r q:r
+58: e:r e:B5 e:B5 e:D6
+59: h:B5~
+60: e:B5 e:B5 e:B5 e:B5
+61: {rs} e:D6 e:D6 e:D6 e:D6
+62: e:r e:D6 e:C6 e:B5
+63: e:A5 e:A5 e:A5 e:A5
+64: e:r e:A5 e:G5 e:F5
+65: e:E5 e:E5 e:E5 e:E5
+66: {v1} e:r e:E5 e:D5 e:C5
+67: {v1} h:B4
+68: {v1 re} e:r e:B5 e:B5 e:B5
+69: {v2} e:r e:B5 e:B5 e:D6
+70: q:B5> e.:B5> s:B5>
+71: e:B5> e:r q:r
+part: alto2 | Saxo alto 2 | key=2 | inst=alto
+sys
+1: {rs} e3:D5 e3:D5 e3:C5 e.:D5 s:C5
+2: e.:D5 s:C5 q:B4
+3: e3:G4 e3:G4 e3:F4 e.:G4 s:F4
+4: e.:G4 s:F4 q:E4
+5: e3:A4 e3:A4 e3:G4 e.:A4 s:G4
+6: {v1} e.:A4 s:G4 e.:E4 s:F4
+7: {v1} h:D4~
+8: {v1 re} e:D4 e:r q:r
+9: {v2} e.:A4 s:G4 e.:E4 s:A4
+10: h:F4>~
+11: e:F4 e:G4 e:G4 e:G4
+12: {rs} e:B4 e:B4 e:G4 e:B4
+13: e:r e:B4 e:B4 e:B4
+14: e:F4 e:F4 e:D4 e:F4
+15: e:r e:F4 e:F4 e:F4
+16: e:A4 e:A4 e:E4 e:A4
+17: e:r e:A4 e:A4 e:A4
+18: {v1} e:B4 e:A4 e:F4 e:F4
+19: {v1 re} e:r e:G4 e:G4 e:G4
+20: {v2} e:B4> e:A4> e:F4> e:E4>
+21: e:F4> e:r q:r
+22: e:r e:D5 e:D5 e:C5
+23: h:D5
+24: e:r e:D5 e:C5 e:B4
+25: e:C5 e:C5 e:C5 e:C5
+26: e:r e:C5 e:B4 e:A4
+27: h:F4~
+28: e:F4 e:D5 e:D5 e:F5
+29: h:D5
+30: e:r e:D5 e:C5 e:B4
+31: e:C5 e:C5 e:C5 e:C5
+32: e:r e:C5 e:B4 e:A4
+33: h:F4~
+34: e:F4 e:D5 e:C5 e:B4
+35: e:C5 e:r q:A4>
+36: e:r e:D5 e:C5 e:B4
+37: e:C5 e:r q:A4>
+38: e:r e:D5 e:C5 e:B4
+39: e:C5 e:r q:E5>~
+40: h:E5
+41: R
+42: R
+43: {rs} e:r e:D5 e:r e:D5
+44: e:r e:D5 e:r e:D5
+45: e:r e:D5 e:r e:D5
+46: e:r e:D5 e:r e:D5
+47: e:r e:C5 e:r e:C5
+48: e:r e:C5 e:r e:C5
+49: {v1} e:r e:D5 e:r e:D5
+50: {v1 re} e:r e:D5 e:r e:D5
+51: {v2} e:r e:D5 e:r e:D5
+52: e:r e:D5 e:D5 e:F5
+53: e:C5 e:r q:A4>
+54: e:r e:D5 e:C5 e:B4
+55: e:C5 e:r q:E5>~
+56: h:E5~
+57: e:E5 e:r q:r
+58: e:r e:F5 e:F5 e:B5
+59: h:F5~
+60: e:F5 e:G5 e:G5 e:G5
+61: {rs} e:B5 e:B5 e:B5 e:B5
+62: e:r e:B5 e:A5 e:G5
+63: e:F5 e:F5 e:F5 e:F5
+64: e:r e:F5 e:E5 e:D5
+65: e:C5 e:C5 e:C5 e:C5
+66: {v1} e:r e:C5 e:B4 e:A4
+67: {v1} h:F4
+68: {v1 re} e:r e:G5 e:G5 e:G5
+69: {v2} e:r e:F5 e:F5 e:B5
+70: q:F5> e.:F5> s:F5>
+71: e:F5> e:r q:r
+part: tbn1 | Trombón 1 | key=-1 | inst=tbn
+sys
+1: {rs} e:r e:F4 e:r e:F4
+2: e:r e:F4 e:r e:F4
+3: e:r e:D4 e:r e:D4
+4: e:r e:D4 e:r e:D4
+5: e:r e:E4 e:r e:E4
+6: {v1} e:r e:E4 e:r e:E4
+7: {v1} e:r e:F4 e:r e:F4
+8: {v1 re} e:r e:F4 e:r e:F4
+9: {v2} e:r e:E4 e:r e:E4
+10: e:r e:F4 e:r e:F4
+11: e:r e:F4 e:F4 e:F4
+12: {rs} e:B4 e:B4 e:F4 e:B4
+13: e:r e:B4 e:B4 e:B4
+14: e:F4 e:F4 e:C4 e:F4
+15: e:r e:F4 e:F4 e:F4
+16: e:G4 e:G4 e:E4 e:G4
+17: e:r e:G4 e:G4 e:G4
+18: {v1} e:A4 e:G4 e:E4 e:F4
+19: {v1 re} e:r e:F4 e:F4 e:F4
+20: {v2} e:A4> e:G4> e:F4> e:E4>
+21: e:D4> e:r e:D4> e:r
+22: e:D4> e:r q:r
+23: e:r e:F4 e:r e:F4
+24: e:r e:F4 e:r e:F4
+25: e:r e:E4 e:r e:E4
+26: e:r e:E4 e:r e:E4
+27: e:r e:F4 e:r e:F4
+28: e:r e:F4 e:r e:F4
+29: e:r e:F4 e:r e:F4
+30: e:r e:F4 e:r e:F4
+31: e:r e:E4 e:r e:E4
+32: e:r e:E4 e:r e:E4
+33: e:r e:F4 e:r e:F4
+34: e:r e:A3 e:G3 e:F3
+35: e:G3 e:r q:F3>
+36: e:r e:A3 e:G3 e:F3
+37: e:G3 e:r q:F3>
+38: e:r e:A3 e:G3 e:F3
+39: e:G3 e:r q:C4>~
+40: h:C4
+41: R
+42: e:r e:F4 e:F4 e:F4
+43: {rs} e:B4 e:B4 e:B4 e:B4
+44: e:r e:B4 e:A4 e:G4
+45: e:F4 e:F4 e:F4 e:F4
+46: e:r e:F4 e:E4 e:D4
+47: e:C4 e:C4 e:C4 e:C4
+48: e:r e:B3 e:A3 e:G3
+49: {v1} h:F3
+50: {v1 re} e:r e:F4 e:F4 e:F4
+51: {v2} h:F3~
+52: e:F3 e:A3 e:A3 e:C4
+53: e:G3 e:r q:F3>
+54: e:r e:A3 e:G3 e:F3
+55: e:G3 e:r q:C4>~
+56: h:C4~
+57: e:C4 e:r q:r
+58: R
+59: R
+60: e:r e:F4 e:F4 e:F4
+61: {rs} e:B4 e:B4 e:B4 e:B4
+62: e:r e:B4 e:A4 e:G4
+63: e:F4 e:F4 e:F4 e:F4
+64: e:r e:F4 e:E4 e:D4
+65: e:C4 e:C4 e:C4 e:C4
+66: {v1} e:r e:B3 e:A3 e:G3
+67: {v1} h:F3
+68: {v1 re} e:r e:F4 e:F4 e:F4
+69: {v2} e:r e:F4 e:F4 e:A4
+70: q:F4> e.:F4> s:F4>
+71: e:F4> e:r q:r
+part: tbn2 | Trombón 2 | key=-1 | inst=tbn
+sys
+1: {rs} e:r e:D4 e:r e:D4
+2: e:r e:D4 e:r e:D4
+3: e:r e:B3 e:r e:B3
+4: e:r e:B3 e:r e:B3
+5: e:r e:C4 e:r e:C4
+6: {v1} e:r e:C4 e:r e:C4
+7: {v1} e:r e:D4 e:r e:D4
+8: {v1 re} e:r e:D4 e:r e:D4
+9: {v2} e:r e:C4 e:r e:C4
+10: e:r e:D4 e:r e:D4
+11: e:r e:D4 e:D4 e:D4
+12: {rs} e:F4 e:F4 e:D4 e:F4
+13: e:r e:F4 e:F4 e:F4
+14: e:C4 e:C4 e:A3 e:C4
+15: e:r e:C4 e:C4 e:C4
+16: e:E4 e:E4 e:C4 e:E4
+17: e:r e:E4 e:E4 e:E4
+18: {v1} e:F4 e:E4 e:C4 e:D4
+19: {v1 re} e:r e:D4 e:D4 e:D4
+20: {v2} e:F4> e:E4> e:D4> e:C4>
+21: e:D4> e:r e:D4> e:r
+22: e:D4> e:r q:r
+23: e:r e:C4 e:r e:C4
+24: e:r e:C4 e:r e:C4
+25: e:r e:C4 e:r e:C4
+26: e:r e:C4 e:r e:C4
+27: e:r e:D4 e:r e:D4
+28: e:r e:D4 e:r e:D4
+29: e:r e:D4 e:r e:D4
+30: e:r e:C4 e:r e:C4
+31: e:r e:C4 e:r e:C4
+32: e:r e:C4 e:r e:C4
+33: e:r e:D4 e:r e:D4
+34: e:r e:F3 e:E3 e:D3
+35: e:E3 e:r q:C3>
+36: e:r e:F3 e:E3 e:D3
+37: e:E3 e:r q:C3>
+38: e:r e:F3 e:E3 e:D3
+39: e:E3 e:r q:E3>~
+40: h:E3
+41: R
+42: e:r e:D4 e:D4 e:D4
+43: {rs} e:F4 e:F4 e:F4 e:F4
+44: e:r e:F4 e:E4 e:D4
+45: e:C4 e:C4 e:C4 e:C4
+46: e:r e:C4 e:B3 e:A3
+47: e:G3 e:G3 e:G3 e:G3
+48: e:r e:G3 e:F3 e:E3
+49: {v1} h:D3
+50: {v1 re} e:r e:D4 e:D4 e:D4
+51: {v2} h:D3~
+52: e:D3 e:F3 e:F3 e:A3
+53: e:E3 e:r q:C3>
+54: e:r e:F3 e:E3 e:D3
+55: e:E3 e:r q:G3>~
+56: h:G3~
+57: e:G3 e:r q:r
+58: R
+59: R
+60: e:r e:D4 e:D4 e:D4
+61: {rs} e:F4 e:F4 e:F4 e:F4
+62: e:r e:F4 e:E4 e:D4
+63: e:C4 e:C4 e:C4 e:C4
+64: e:r e:C4 e:B3 e:A3
+65: e:G3 e:G3 e:G3 e:G3
+66: {v1} e:r e:G3 e:F3 e:E3
+67: {v1} h:D3
+68: {v1 re} e:r e:D4 e:D4 e:D4
+69: {v2} e:r e:D4 e:D4 e:F4
+70: q:D4> e.:D4> s:D4>
+71: e:D4> e:r q:r
+part: tuba_src | Tuba en Si bemol (fuente) | key=1 | inst=tuba | hidden=1
+sys
+1: {rs} e:E2 e:r e:B2 e:r
+2: e:E2 e:r e:B2 e:r
+3: e:C3 e:r e:E2 e:r
+4: e:C3 e:r e:A2 e:r
+5: e:D3 e:r e:A2 e:r
+6: {v1} e:D3 e:r e:A2 e:r
+7: {v1} e:G2 e:r e:D3 e:r
+8: {v1 re} e:G2 e:r e:D3 e:r
+9: {v2} e:G2 e:r e:D3 e:r
+10: e:E3 e:r e:E3 e:r
+11: e:E3 e:r q:r
+12: {rs} e:C3 e:r e:E2 e:r
+13: e:C3 e:r e:A2 e:r
+14: e:G2 e:r e:D3 e:r
+15: e:G2 e:r e:D3 e:r
+16: e:D3 e:r e:A2 e:r
+17: e:D3 e:r e:A2 e:r
+18: {v1} e:E2 e:r e:B2 e:r
+19: {v1 re} e:E2 e:r e:G2 e:r
+20: {v2} e:E3 e:r e:B2 e:r
+21: e:E3 e:r e:E3 e:r
+22: e:E3 e:r q:r
+23: e:G2 e:r e:D3 e:r
+24: e:G2 e:r e:D3 e:r
+25: e:D3 e:r e:A2 e:r
+26: e:D3 e:r e:A2 e:r
+27: e:E2 e:r e:B2 e:r
+28: e:E2 e:r e:B2 e:r
+29: e:G2 e:r e:D3 e:r
+30: e:G2 e:r e:D3 e:r
+31: e:D3 e:r e:A2 e:r
+32: e:D3 e:r e:A2 e:r
+33: e:E2 e:r e:B2 e:r
+34: e:E3> e:B2 e:A2 e:G2
+35: e:A2 e:r q:G2>
+36: e:r e:B2 e:A2 e:G2
+37: e:A2 e:r q:G2>
+38: e:r e:B2 e:A2 e:G2
+39: e:A2 e:r q:D3>
+40: e:D3 e:r e:D3 e:r
+41: e:D3 e:r e:D3 e:r
+42: e:D3 e:r q:r
+43: {rs} e:C3 e:r e:G2 e:r
+44: e:C3 e:r e:G2 e:r
+45: e:G2 e:r e:D3 e:r
+46: e:G2 e:r e:D3 e:r
+47: e:D3 e:r e:A2 e:r
+48: e:D3 e:r e:A2 e:r
+49: {v1} e:E3 e:r e:B2 e:r
+50: {v1 re} e:E2 e:r e:G2 e:r
+51: {v2} e.:E3> s:E3> e.:B2> s:G2>
+52: e:E2> e:B2 e:B2 e:D3
+53: e:A2 e:r q:G2>
+54: e:r e:B2 e:A2 e:G2
+55: e:A2 e:r q:D3>
+56: e:D3 e:r e:D3 e:r
+57: e:D3 e:r e:D3 e:r
+58: e:D3 e:r q:r
+59: e.:E3> s:E3> e.:B2> s:G2>
+60: e:E2> e:r q:r
+61: {rs} e:C3 e:r e:G2 e:r
+62: e:C3 e:r e:G2 e:r
+63: e:G2 e:r e:D3 e:r
+64: e:G2 e:r e:D3 e:r
+65: e:D3 e:r e:A2 e:r
+66: {v1} e:D3 e:r e:A2 e:r
+67: {v1} e:E3 e:r e:B2 e:r
+68: {v1 re} e:E2 e:r e:G2 e:r
+69: {v2} e:D3 e:r e:A2 e:r
+70: e.:E3> s:E3> e.:B2> s:G2>
+71: e:E2> e:r q:r
+part: tuba | Tuba | key=-1 | inst=tuba | from=tuba_src | semis=-2 | steps=-1 | keyd=-2

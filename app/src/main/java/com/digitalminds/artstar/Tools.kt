@@ -290,15 +290,27 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
     private val freqV = label(ctx, "", 14f, C.MUTED)
     private val writtenV = label(ctx, "", 15f, C.TEXT, Fonts.medium)
     private val statusV = label(ctx, "", 13f, C.MUTED)
+    private val instInfoV = label(ctx, "", 12f, C.DIM)
     private val bar = CentsBar(ctx)
     private val arc = DbArc(ctx)
     private val refV = label(ctx, "", 15f, C.TEXT, Fonts.medium)
     private val handler = Handler(Looper.getMainLooper())
     private val fade = Runnable { if (System.currentTimeMillis() - lastVoiced > 600) showIdle() }
-    private var instSel = host.prefs.getInt("tuner_inst", 1)
-    private val instNames = listOf("Sonido real", "Si bemol (bajo, trompeta)", "Mi bemol (saxo alto)")
-    private val instShift = intArrayOf(0, 2, 9)
-    private var stableSince = 0L
+    private var instSel = host.prefs.getInt("tuner_inst2", 1).coerceIn(0, 4)
+    private val instShort = listOf("Real", "Si bemol", "Mi bemol", "Trombón", "Tuba")
+    private val instInfo = listOf(
+        "Sonido real: muestra la nota tal como suena.",
+        "Si bemol: bajo, barítono y trompeta. Tu partitura está un tono más arriba de lo que suena.",
+        "Mi bemol: saxo alto. Tu partitura está una sexta mayor más arriba de lo que suena.",
+        "Trombón en Si bemol, clave de fa: suena como se escribe.",
+        "Tuba en Si bemol, clave de fa: suena como se escribe. Llega a las notas más graves."
+    )
+    private val instShift = intArrayOf(0, 2, 9, 0, 0)
+
+    // estabilidad: se promedia una ventana de lecturas y solo se muestra una nota firme
+    private val hist = ArrayList<Float>()
+    private var miss = 0
+    private var shownMidi = -1f
 
     init {
         val col = LinearLayout(ctx)
@@ -306,8 +318,14 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
         col.gravity = Gravity.CENTER_HORIZONTAL
         col.setPadding(ctx.dpi(20f), ctx.dpi(10f), ctx.dpi(20f), ctx.dpi(10f))
         addView(col, LayoutParams(MATCH, MATCH))
-        col.addView(pickRow(ctx, instNames, instSel) { instSel = it; host.prefs.edit().putInt("tuner_inst", it).apply() }, lp(WRAP, WRAP).also { it.topMargin = ctx.dpi(6f) })
-        col.addView(arc, lp(MATCH, ctx.dpi(150f)).also { it.topMargin = ctx.dpi(10f) })
+        col.addView(liveSegmented(ctx, instShort, instSel, 12.5f, 8f) {
+            instSel = it; host.prefs.edit().putInt("tuner_inst2", it).apply(); instInfoV.text = instInfo[it]; resetStability()
+        }, lp(MATCH, WRAP).also { it.topMargin = ctx.dpi(6f) })
+        instInfoV.text = instInfo[instSel]
+        instInfoV.gravity = Gravity.CENTER
+        instInfoV.setPadding(ctx.dpi(6f), ctx.dpi(6f), ctx.dpi(6f), 0)
+        col.addView(instInfoV, lp(MATCH, WRAP))
+        col.addView(arc, lp(MATCH, ctx.dpi(150f)).also { it.topMargin = ctx.dpi(8f) })
         col.addView(android.view.View(ctx), lp(MATCH, 0, 0.25f))
         val nrow = LinearLayout(ctx)
         nrow.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
@@ -318,6 +336,7 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
         col.addView(freqV, lp(WRAP, WRAP))
         col.addView(bar, lp(MATCH, ctx.dpi(90f)).also { it.topMargin = ctx.dpi(16f) })
         writtenV.setPadding(0, ctx.dpi(10f), 0, 0)
+        writtenV.gravity = Gravity.CENTER
         col.addView(writtenV, lp(WRAP, WRAP))
         statusV.setPadding(0, ctx.dpi(6f), 0, 0)
         col.addView(statusV, lp(WRAP, WRAP))
@@ -345,12 +364,16 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
         refV.text = "La = $a4 Hz"
     }
 
+    private fun resetStability() { hist.clear(); miss = 0; shownMidi = -1f; smoothCents = 0f }
+
     private fun showIdle() {
         noteV.text = "-"
         octV.text = ""
         freqV.text = ""
         writtenV.text = ""
         bar.live = false
+        resetStability()
+        statusV.setTextColor(C.MUTED)
         statusV.text = if (detector != null) "Toca una nota larga y firme" else "Micrófono apagado"
     }
 
@@ -359,7 +382,8 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
         host.ensureMic { ok ->
             if (!active) return@ensureMic
             if (!ok) { statusV.text = "Falta el permiso del micrófono"; return@ensureMic }
-            val d = PitchDetector({ a4.toDouble() }, { 0.008f }) { f -> onFrame(f) }
+            // umbral de nivel mas alto que antes: la voz y el ruido de fondo no deben mover la aguja
+            val d = PitchDetector({ a4.toDouble() }, { 0.014f }, 0.12f) { f -> onFrame(f) }
             if (d.start()) { detector = d; statusV.text = "Toca una nota larga y firme" } else statusV.text = "No se pudo abrir el micrófono"
         }
     }
@@ -375,23 +399,40 @@ class TunerTab(private val host: Host) : FrameLayout(host as Context) {
     private fun onFrame(f: PitchFrame) {
         if (!active) return
         arc.setLevel(f.level)
-        if (!f.voiced) { stableSince = System.currentTimeMillis(); handler.postDelayed(fade, 650); return }
+        // una lectura vale solo si es clara; las dudosas (voz, soplido, ruido) se descartan
+        if (!f.voiced || f.clarity < 0.9f) {
+            miss++
+            if (miss >= 3) { hist.clear(); shownMidi = -1f }
+            handler.removeCallbacks(fade); handler.postDelayed(fade, 650)
+            return
+        }
+        miss = 0
+        hist.add(f.midi)
+        while (hist.size > 7) hist.removeAt(0)
+        if (hist.size < 5) return                       // aun no hay una nota estable
+        val sorted = hist.sorted()
+        val median = sorted[sorted.size / 2]
+        if (sorted.last() - sorted.first() > 0.8f) return // las lecturas saltan: no es una nota firme
+        // la nota mostrada solo cambia si la nueva lectura se sostiene
+        val nearest = Math.round(median)
+        val cents = (median - nearest) * 100f
         lastVoiced = System.currentTimeMillis()
-        val nearest = Math.round(f.midi)
         noteV.text = Names.pitchClass(nearest)
         octV.text = (Math.floorDiv(nearest, 12) - 1).toString()
-        freqV.text = String.format("%.1f Hz", f.freq)
-        smoothCents = if (abs(smoothCents - f.cents) > 30f) f.cents else smoothCents * 0.6f + f.cents * 0.4f
+        freqV.text = String.format("%.1f Hz", midiToFreq(median.toDouble(), a4.toDouble()))
+        smoothCents = if (shownMidi < 0f || Math.round(shownMidi) != nearest) cents else smoothCents * 0.7f + cents * 0.3f
+        shownMidi = median
         bar.cents = smoothCents
         bar.live = true
         val c = smoothCents
-        val now = System.currentTimeMillis()
-        if (abs(c) > 5f) stableSince = now
-        val tuned = abs(c) <= 5f && now - stableSince > 350
+        val tuned = abs(c) <= 5f
         statusV.text = if (tuned) "Afinado" else if (c > 0) "Alto: baja un poco (${c.toInt()} centésimas)" else "Bajo: sube un poco (${(-c).toInt()} centésimas)"
         statusV.setTextColor(if (tuned) C.TEXT else C.MUTED)
-        writtenV.text = if (instSel == 0) "Nota real: " + Names.withOctave(nearest)
-            else "Suena " + Names.pitchClass(nearest) + ". En tu partitura es " + Names.pitchClass(nearest + instShift[instSel]) + "."
+        writtenV.text = when (instSel) {
+            0 -> "Nota real: " + Names.withOctave(nearest)
+            3, 4 -> "Suena " + Names.withOctave(nearest) + ". Se lee igual en la partitura (clave de fa)."
+            else -> "Suena " + Names.pitchClass(nearest) + ". En tu partitura es " + Names.pitchClass(nearest + instShift[instSel]) + "."
+        }
         handler.removeCallbacks(fade)
         handler.postDelayed(fade, 900)
     }

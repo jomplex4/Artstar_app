@@ -102,6 +102,8 @@ class Synth {
     private var track: AudioTrack? = null
 
     @Volatile var volume = 0.9f
+    @Volatile private var muted = false
+    @Volatile private var clearReq = false
     @Volatile var metroOn = false
     @Volatile var metroBpm = 100
     @Volatile var metroBeats = 4
@@ -143,6 +145,8 @@ class Synth {
     fun noteOn(ch: Int, inst: String, midi: Int, vel: Float) { queue.add(Cmd(1, ch, midi, vel, inst)) }
     fun noteOff(ch: Int) { queue.add(Cmd(2, ch)) }
     fun allOff() { queue.add(Cmd(5)) }
+    /** Silencia con una rampa corta (sin chasquido) y, al llegar a cero, descarta voces, percusion y tarolas en cola. Al quitarlo el audio vuelve limpio. */
+    fun mute(on: Boolean) { if (on) { muted = true; clearReq = true } else muted = false }
     fun drum(type: Int, level: Float, roll: Boolean = false) { queue.add(Cmd(6, if (roll) 1 else 0, type, level)) }
     fun click(level: Int) { queue.add(Cmd(3, 0, level)) }
     /** Nota corta de prueba (explorador, tablas, afinador). */
@@ -160,6 +164,8 @@ class Synth {
         val atk = 1f / (0.004f * RATE)
         val rel = 1f / (0.09f * RATE)
         val ratio = Bank.rate.toDouble() / RATE
+        var gate = 1f
+        val gateStep = 1f / (0.012f * RATE)
 
         fun freeVoice(): Voice {
             for (v in voices) if (!v.active) return v
@@ -177,6 +183,13 @@ class Synth {
         }
 
         while (running) {
+            if (clearReq && muted && gate <= 0f) {
+                clearReq = false
+                queue.clear()
+                for (v in voices) v.active = false
+                for (d in drums) d.active = false
+                clickPos = -1
+            }
             var c = queue.poll()
             while (c != null) {
                 when (c.type) {
@@ -294,7 +307,8 @@ class Synth {
 
             val vol = volume
             for (i in 0 until n) {
-                var o = mix[i] * vol
+                if (muted) { if (gate > 0f) gate = max(0f, gate - gateStep) } else if (gate < 1f) gate = min(1f, gate + gateStep)
+                var o = mix[i] * vol * gate
                 o = if (o > 1f) 1f else if (o < -1f) -1f else o
                 buf[i] = (o * 32000f).toInt().toShort()
             }

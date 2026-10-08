@@ -13,14 +13,14 @@ import kotlin.math.round
 import kotlin.math.sqrt
 
 /** Resultado de un cuadro de analisis. voiced = hay una nota estable; pc = clase de altura 0..11 (Do=0). */
-class PitchFrame(val voiced: Boolean, val freq: Float, val midi: Float, val pc: Int, val cents: Float, val level: Float, val noteId: Int)
+class PitchFrame(val voiced: Boolean, val freq: Float, val midi: Float, val pc: Int, val cents: Float, val level: Float, val noteId: Int, val clarity: Float = 0f)
 
 /**
- * Detector monofonico de altura (YIN). Trabaja a 22050 Hz tras decimar, con ventana de 2048 muestras.
+ * Detector monofonico de altura (YIN). Trabaja a 22050 Hz tras decimar, con ventana de 3072 muestras (llega hasta unos 15 Hz, suficiente para la tuba).
  * Para comparar con la partitura se usa la clase de altura (octava ignorada), asi funciona igual con bajo,
  * barítono o trompeta aunque el instrumento suene en otra octava.
  */
-class PitchDetector(private val a4: () -> Double, private val sensitivity: () -> Float, private val onFrame: (PitchFrame) -> Unit) {
+class PitchDetector(private val a4: () -> Double, private val sensitivity: () -> Float, private val yinThreshold: Float = 0.12f, private val onFrame: (PitchFrame) -> Unit) {
     private val main = Handler(Looper.getMainLooper())
     @Volatile private var running = false
     private var thread: Thread? = null
@@ -62,7 +62,7 @@ class PitchDetector(private val a4: () -> Double, private val sensitivity: () ->
     private fun loop(r: AudioRecord) {
         val hop = 2048                     // muestras a 44100 por lectura
         val raw = ShortArray(hop)
-        val n = 2048                       // ventana a 22050
+        val n = 3072                       // ventana a 22050 (mas larga para las notas graves)
         val win = FloatArray(n)
         var filled = 0
         val half = n / 2
@@ -97,6 +97,7 @@ class PitchDetector(private val a4: () -> Double, private val sensitivity: () ->
         val gate = sensitivity()
         var voiced = false
         var f0 = 0f
+        var clarity = 0f
         if (level > gate) {
             // funcion de diferencia
             for (tau in 1 until w) {
@@ -119,7 +120,7 @@ class PitchDetector(private val a4: () -> Double, private val sensitivity: () ->
             var tau = tauMin
             var found = -1
             while (tau < w - 1) {
-                if (cm[tau] < 0.16f) {
+                if (cm[tau] < yinThreshold) {   // mas bajo = mas exigente
                     while (tau + 1 < w - 1 && cm[tau + 1] < cm[tau]) tau++
                     found = tau
                     break
@@ -132,7 +133,8 @@ class PitchDetector(private val a4: () -> Double, private val sensitivity: () ->
                 val shift = if (abs(den) > 1e-9f) 0.5f * (a - c) / den else 0f
                 val t = found + shift
                 f0 = 22050f / t
-                voiced = f0 in 30f..1500f
+                clarity = (1f - b).coerceIn(0f, 1f)
+                voiced = f0 in 25f..1500f
             }
         }
         if (!voiced) {
@@ -147,6 +149,6 @@ class PitchDetector(private val a4: () -> Double, private val sensitivity: () ->
         if (pc != lastPc || gap >= 2) noteId++
         lastPc = pc
         gap = 0
-        return PitchFrame(true, f0, midi, pc, cents, level, noteId)
+        return PitchFrame(true, f0, midi, pc, cents, level, noteId, clarity)
     }
 }

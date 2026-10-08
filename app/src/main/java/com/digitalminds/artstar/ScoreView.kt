@@ -31,6 +31,13 @@ class ScoreView(ctx: Context) : View(ctx) {
     var bass = false
     var waiting = false
     var onTap: (() -> Unit)? = null
+    /** Arrastre horizontal: se avisa del inicio, de cada desplazamiento (en ticks) y del final. */
+    var onDragStart: (() -> Unit)? = null
+    var onDrag: ((Float) -> Unit)? = null
+    var onDragEnd: (() -> Unit)? = null
+    private var downX = 0f
+    private var lastX = 0f
+    private var moved = false
 
     private var sp = 10f
     private val TOP = 10f
@@ -93,8 +100,8 @@ class ScoreView(ctx: Context) : View(ctx) {
             c.clipRect(ce, 0f, w, h)
             val tMin = curTick - (nx - ce) / ppt - st.mlen
             val tMax = curTick + (w - nx) / ppt + st.mlen
-            val first = max(0, floor(tMin / st.mlen).toInt())
-            val last = min(st.slots.size - 1, floor(tMax / st.mlen).toInt())
+            val first = max(0, floor((tMin + st.lead) / st.mlen).toInt())
+            val last = min(st.slots.size - 1, floor((tMax + st.lead) / st.mlen).toInt())
             for (i in first..last) drawSlot(c, st, st.slots[i])
             c.restore()
         }
@@ -488,7 +495,25 @@ class ScoreView(ctx: Context) : View(ctx) {
     }
 
     override fun onTouchEvent(e: MotionEvent): Boolean {
-        if (e.actionMasked == MotionEvent.ACTION_UP) { performClick(); onTap?.invoke() }
+        when (e.actionMasked) {
+            MotionEvent.ACTION_DOWN -> { downX = e.x; lastX = e.x; moved = false }
+            MotionEvent.ACTION_MOVE -> {
+                if (!moved && abs(e.x - downX) > context.dp(10f)) {
+                    moved = true
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                    lastX = e.x
+                    onDragStart?.invoke()
+                }
+                if (moved) {
+                    val dx = e.x - lastX
+                    lastX = e.x
+                    // el dedo a la derecha lleva la musica hacia atras (retroceder), a la izquierda adelanta
+                    onDrag?.invoke(-dx / ppt)
+                }
+            }
+            MotionEvent.ACTION_UP -> { if (moved) onDragEnd?.invoke() else { performClick(); onTap?.invoke() } }
+            MotionEvent.ACTION_CANCEL -> { if (moved) onDragEnd?.invoke() }
+        }
         return true
     }
 

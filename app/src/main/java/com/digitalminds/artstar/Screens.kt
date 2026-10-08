@@ -166,7 +166,7 @@ fun scrollOf(ctx: Context, build: (LinearLayout) -> Unit): FastScrollView {
     val fs = FastScrollView(ctx)
     val col = LinearLayout(ctx)
     col.orientation = LinearLayout.VERTICAL
-    col.setPadding(ctx.dpi(16f), ctx.dpi(6f), ctx.dpi(30f), ctx.dpi(24f))
+    col.setPadding(ctx.dpi(16f), ctx.dpi(6f), ctx.dpi(24f), ctx.dpi(24f))
     build(col)
     fs.setContent(col)
     return fs
@@ -188,6 +188,36 @@ fun segmented(ctx: Context, names: List<String>, selected: Int, textSp: Float, p
     }
     return pill
 }
+
+/** Selector segmentado que se repinta solo al tocar (no hace falta reconstruir la pantalla). */
+fun liveSegmented(ctx: Context, names: List<String>, selected: Int, textSp: Float, padV: Float, onPick: (Int) -> Unit): LinearLayout {
+    val pill = LinearLayout(ctx)
+    pill.background = roundRect(C.CARD2, ctx.dp(24f))
+    pill.setPadding(ctx.dpi(3f), ctx.dpi(3f), ctx.dpi(3f), ctx.dpi(3f))
+    val tvs = ArrayList<TextView>()
+    fun paint(sel: Int) {
+        for ((i, t) in tvs.withIndex()) {
+            t.setTextColor(if (i == sel) C.TEXT else C.MUTED)
+            t.typeface = if (i == sel) Fonts.bold else Fonts.medium
+            t.background = if (i == sel) roundRect(C.RED, ctx.dp(20f)) else null
+        }
+    }
+    for ((i, n) in names.withIndex()) {
+        val t = label(ctx, n, textSp, C.MUTED, Fonts.medium)
+        t.gravity = Gravity.CENTER
+        t.maxLines = 1
+        t.setPadding(ctx.dpi(4f), ctx.dpi(padV), ctx.dpi(4f), ctx.dpi(padV))
+        t.tap { paint(i); onPick(i) }
+        tvs.add(t)
+        pill.addView(t, lp(0, WRAP, 1f))
+    }
+    paint(selected)
+    return pill
+}
+
+/** Selector de instrumento con los cinco a la vista: Bajo, Trompeta, Saxo, Trombón y Tuba. */
+fun instPicker(ctx: Context, selected: Int, onPick: (Int) -> Unit): LinearLayout =
+    liveSegmented(ctx, listOf("Bajo", "Trompeta", "Saxo", "Trombón", "Tuba"), selected, 12.5f, 9f, onPick)
 
 /** Fila de pastillas de seleccion (una activa). */
 fun pickRow(ctx: Context, names: List<String>, selected: Int, onPick: (Int) -> Unit): View {
@@ -212,17 +242,20 @@ fun soundOf(inst: InstDef, writtenMidi: Int): Int = writtenMidi + inst.transpose
 class LibraryTab(private val host: Host, private val songs: List<SongInfo>, private val open: (SongInfo, String, Int) -> Unit) : LinearLayout(host as Context) {
     private val ctx: Context = host as Context
     private var instIdx = host.prefs.getInt("lib_inst", 0).coerceIn(0, 4)
-    private var voice = host.prefs.getInt("lib_voice", 0).coerceIn(0, 1)
+    private var voice = host.prefs.getInt("lib_voice", 0).coerceIn(0, 2)
 
     init {
         orientation = VERTICAL
         build()
     }
 
+    private fun voiceCount(): Int =
+        songs.filter { it.cat == "song" }.maxOfOrNull { it.partsOf(Insts.practice[instIdx].id).size }?.coerceIn(2, 3) ?: 2
+
     private fun partFor(s: SongInfo): PartInfo? {
         val list = s.partsOf(Insts.practice[instIdx].id)
         if (list.isEmpty()) return null
-        return list.getOrNull(voice) ?: list[0]
+        return list.getOrNull(voice) ?: list.last()
     }
 
     private fun build() {
@@ -232,14 +265,15 @@ class LibraryTab(private val host: Host, private val songs: List<SongInfo>, priv
         head.orientation = VERTICAL
         head.setPadding(ctx.dpi(16f), ctx.dpi(2f), ctx.dpi(16f), ctx.dpi(6f))
         head.addView(segmented(ctx, listOf("Bajo", "Trompeta", "Saxo", "Trombón", "Tuba"), instIdx, 12.5f, 9f) {
-            instIdx = it; host.prefs.edit().putInt("lib_inst", it).apply(); build()
+            instIdx = it; host.prefs.edit().putInt("lib_inst", it).apply(); voice = voice.coerceAtMost(voiceCount() - 1); build()
         })
         val row = LinearLayout(ctx)
         row.gravity = Gravity.CENTER_VERTICAL
         row.addView(label(ctx, "${list.size} marchas", 16f, C.TEXT, Fonts.bold), lp(0, WRAP, 1f))
-        row.addView(segmented(ctx, listOf("1ª voz", "2ª voz"), voice, 12.5f, 6f) {
+        val voiceNames = listOf("1ª voz", "2ª voz", "3ª voz").take(voiceCount())
+        row.addView(segmented(ctx, voiceNames, voice.coerceAtMost(voiceNames.size - 1), 12.5f, 6f) {
             voice = it; host.prefs.edit().putInt("lib_voice", it).apply(); build()
-        }, lp(ctx.dpi(150f), WRAP))
+        }, lp(ctx.dpi(75f * voiceNames.size), WRAP))
         head.addView(row, lp(MATCH, WRAP).also { it.topMargin = ctx.dpi(10f) })
         addView(head, lp(MATCH, WRAP))
         addView(scrollOf(ctx) { col ->
@@ -271,7 +305,7 @@ class LibraryTab(private val host: Host, private val songs: List<SongInfo>, priv
 
 // ====================== APRENDER ======================
 
-class LearnTab(private val host: Host, private val songs: List<SongInfo>, private val open: (SongInfo, String, Int) -> Unit, private val push: (String, View) -> Unit) : LinearLayout(host as Context) {
+class LearnTab(private val host: Host, private val songs: List<SongInfo>, private val open: (SongInfo, String, Int) -> Unit, private val push: (String, () -> View) -> Unit) : LinearLayout(host as Context) {
     private val ctx: Context = host as Context
 
     init {
@@ -299,9 +333,9 @@ class LearnTab(private val host: Host, private val songs: List<SongInfo>, privat
                 c.tap(action)
                 col.addView(c, cardLp(ctx))
             }
-            entry("\uE050", true, "Explorador de notas", "Sube y baja nota por nota con las flechas, en tu instrumento, y escúchala.") { push("Explorador de notas", ExplorerView(host)) }
-            entry("\uE1D5", true, "Símbolos de la partitura", "Cada figura, silencio y signo, uno por uno.") { push("Símbolos", symbolsView()) }
-            entry("0 1 2", false, "Tabla de digitación", "Pistones, vara y llaves de cada instrumento, con sonido y las marchas donde se usa cada nota.") { push("Tabla de digitación", ChartView(host)) }
+            entry("\uE050", true, "Explorador de notas", "Sube y baja nota por nota con las flechas, en tu instrumento, y escúchala.") { push("Explorador de notas") { ExplorerView(host) } }
+            entry("\uE1D5", true, "Símbolos de la partitura", "Cada figura, silencio y signo, uno por uno.") { push("Símbolos") { symbolsView() } }
+            entry("0 1 2", false, "Tabla de digitación", "Pistones, vara y llaves de cada instrumento, con sonido y las marchas donde se usa cada nota.") { push("Tabla de digitación") { ChartView(host) } }
 
             val lessons = songs.filter { it.cat == "lesson" }
             val groups = LinkedHashMap<String, ArrayList<SongInfo>>()
@@ -314,9 +348,16 @@ class LearnTab(private val host: Host, private val songs: List<SongInfo>, privat
                     "Escalas" -> "\uE050"
                     else -> "\uE1D7"
                 }
-                entry(glyph, true, g, "${items.size} ejercicios: " + items.take(3).joinToString(", ") { it.title } + if (items.size > 3) "..." else "") { push(g, groupView(g, items)) }
+                entry(glyph, true, g, "${items.size} ejercicios: " + items.take(3).joinToString(", ") { it.title } + if (items.size > 3) "..." else "") { push(g) { groupView(g, items) } }
             }
         }, lp(MATCH, 0, 1f))
+        // al salir de practicar se vuelve a la lista del grupo (por ejemplo, Canciones), no al menú Aprender completo
+        val back = host.prefs.getString("ret_group", "") ?: ""
+        if (back.isNotEmpty()) {
+            host.prefs.edit().remove("ret_group").apply()
+            val items = songs.filter { it.cat == "lesson" && it.group == back }
+            if (items.isNotEmpty()) push(back) { groupView(back, items) }
+        }
     }
 
     /** Ventana propia de un grupo de ejercicios. */
@@ -333,7 +374,7 @@ class LearnTab(private val host: Host, private val songs: List<SongInfo>, privat
             go.background = roundRect(C.CARD2, ctx.dp(18f))
             go.addView(IconView(ctx, IconView.PLAY).also { it.color = C.RED_HI }, FrameLayout.LayoutParams(ctx.dpi(22f), ctx.dpi(22f), Gravity.CENTER))
             c.addView(go, lp(ctx.dpi(36f), ctx.dpi(36f)))
-            c.tap { push(l.title, lessonView(l)) }
+            c.tap { push(l.title) { lessonView(l) } }
             col.addView(c, cardLp(ctx))
         }
     }
@@ -346,7 +387,7 @@ class LearnTab(private val host: Host, private val songs: List<SongInfo>, privat
             col.addView(label(ctx, song.desc, 16f, C.TEXT).also { it.setLineSpacing(0f, 1.2f); it.setPadding(0, ctx.dpi(8f), 0, ctx.dpi(14f)) })
             col.addView(label(ctx, "Compás ${song.num}/${song.den} · tempo ${song.bpm} · ${info.bars} compases", 13f, C.MUTED).also { it.setPadding(0, 0, 0, ctx.dpi(14f)) })
             col.addView(label(ctx, "Instrumento", 13f, C.MUTED, Fonts.medium).also { it.setPadding(0, 0, 0, ctx.dpi(6f)) })
-            col.addView(pickRow(ctx, Insts.practice.map { it.name }, instIdx) { instIdx = it; host.prefs.edit().putInt("lib_inst", it).apply() },
+            col.addView(instPicker(ctx, instIdx) { instIdx = it; host.prefs.edit().putInt("lib_inst", it).apply() },
                 lp(MATCH, WRAP).also { it.bottomMargin = ctx.dpi(16f) })
             fun big(text: String, sub: String, mode: Int, primary: Boolean) {
                 val c = card(ctx)
@@ -358,6 +399,7 @@ class LearnTab(private val host: Host, private val songs: List<SongInfo>, privat
                 c.addView(tx, lp(0, WRAP, 1f))
                 c.tap {
                     val id = song.parts.firstOrNull { it.inst.id == Insts.practice[instIdx].id }?.id ?: song.parts[0].id
+                    host.prefs.edit().putString("ret_group", info.group).apply()
                     open(info, id, mode)
                 }
                 col.addView(c, cardLp(ctx))
@@ -432,7 +474,7 @@ class ChartView(private val host: Host) : LinearLayout(host as Context) {
 
     init {
         orientation = VERTICAL
-        addView(pickRow(ctx, Insts.practice.map { it.name }, instIdx) { instIdx = it; host.prefs.edit().putInt("lib_inst", it).apply(); fill() },
+        addView(instPicker(ctx, instIdx) { instIdx = it; host.prefs.edit().putInt("lib_inst", it).apply(); fill() },
             lp(MATCH, WRAP).also { it.setMargins(ctx.dpi(16f), 0, ctx.dpi(16f), ctx.dpi(8f)) })
         addView(holder, lp(MATCH, 0, 1f))
         fill()
@@ -518,7 +560,7 @@ class ExplorerView(private val host: Host) : LinearLayout(host as Context) {
     init {
         orientation = VERTICAL
         setPadding(ctx.dpi(16f), 0, ctx.dpi(16f), ctx.dpi(14f))
-        addView(pickRow(ctx, Insts.practice.map { it.name }, instIdx) { instIdx = it; host.prefs.edit().putInt("lib_inst", it).apply(); update(true) })
+        addView(instPicker(ctx, instIdx) { instIdx = it; host.prefs.edit().putInt("lib_inst", it).apply(); update(true) })
         val mid = LinearLayout(ctx)
         mid.gravity = Gravity.CENTER_VERTICAL
         mid.addView(staff, lp(0, MATCH, 1f))
@@ -655,7 +697,7 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
     private var tab = host.prefs.getInt("tab", 0).coerceIn(0, 1)
     private var metro: MetronomeTab? = null
     private var tuner: TunerTab? = null
-    private val stack = ArrayList<Pair<String, View>>()
+    private val stack = ArrayList<Pair<String, () -> View>>()
 
     init {
         setBackgroundColor(C.BG)
@@ -704,12 +746,12 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
     private fun showAbout() {
         val d = Dialog(ctx)
         d.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        val sv = ScrollView(ctx)
+        val sv = FastScrollView(ctx)
         val box = LinearLayout(ctx)
         box.orientation = LinearLayout.VERTICAL
-        box.setPadding(ctx.dpi(22f), ctx.dpi(22f), ctx.dpi(22f), ctx.dpi(16f))
+        box.setPadding(ctx.dpi(22f), ctx.dpi(22f), ctx.dpi(26f), ctx.dpi(16f))
         box.background = roundRect(C.CARD, ctx.dp(24f))
-        sv.addView(box)
+        sv.setContent(box)
 
         val top = LinearLayout(ctx)
         top.gravity = Gravity.CENTER_VERTICAL
@@ -734,8 +776,9 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
             "Marchas con voces para bajo, trompeta, saxo, trombón y tuba.",
             "Banda de acompañamiento con instrumentos reales y percusión de marcha.",
             "Modo espera y modo evaluar con el micrófono.",
+            "Saltos de segundos y arrastre sobre la partitura para moverte como en un reproductor.",
             "Metrónomo con subdivisiones y afinador con medidor de nivel.",
-            "Lecciones, símbolos, tablas de digitación y 17 canciones.",
+            "Lecciones, símbolos, tablas de digitación y 10 canciones.",
             "Funciona sin internet y sin anuncios."
         )) {
             val r = LinearLayout(ctx)
@@ -778,7 +821,7 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
         content.removeAllViews()
         when (i) {
             0 -> content.addView(LibraryTab(host, songs, open), LayoutParams(MATCH, MATCH))
-            1 -> content.addView(LearnTab(host, songs, open) { t, v -> showDetail(t, v) }, LayoutParams(MATCH, MATCH))
+            1 -> content.addView(LearnTab(host, songs, open) { t, make -> showDetail(t, make) }, LayoutParams(MATCH, MATCH))
             2 -> { val m = MetronomeTab(host); metro = m; content.addView(m, LayoutParams(MATCH, MATCH)); m.activate() }
             3 -> { val t = TunerTab(host); tuner = t; content.addView(t, LayoutParams(MATCH, MATCH)); t.activate() }
         }
@@ -788,8 +831,8 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
         }
     }
 
-    private fun showDetail(title: String, v: View) {
-        stack.add(Pair(title, v))
+    private fun showDetail(title: String, make: () -> View) {
+        stack.add(Pair(title, make))
         renderDetail()
     }
 
@@ -797,7 +840,7 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
         detail.removeAllViews()
         val top = stack.lastOrNull()
         if (top == null) { detail.visibility = GONE; return }
-        detail.addView(DetailFrame(ctx, top.first, top.second) { back() }, LayoutParams(MATCH, MATCH))
+        detail.addView(DetailFrame(ctx, top.first, top.second()) { back() }, LayoutParams(MATCH, MATCH))
         detail.visibility = VISIBLE
     }
 
@@ -817,4 +860,4 @@ class HomeScreen(private val host: Host, private val open: (SongInfo, String, In
     fun onLeave() { metro?.deactivate(); tuner?.deactivate() }
 }
 
-object BuildConfigLite { const val VERSION = "1.5" }
+object BuildConfigLite { const val VERSION = "1.6" }
